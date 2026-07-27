@@ -1,0 +1,32 @@
+# Gradle
+.gradle/
+build/
+out/
+bin/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# macOS
+.DS_Store
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+application-secret.properties
+application-secret.yml
+application-secret.yaml
+
+# Logs
+*.log
+logs/
+
+# H2 database files
+*.db
+*.mv.db
+*.trace.db
+
