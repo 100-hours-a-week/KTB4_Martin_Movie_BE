@@ -9,3 +9,7 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: false
+
+movie:
+  import:
+    enabled: ${MOVIE_IMPORT_ENABLED:false}
