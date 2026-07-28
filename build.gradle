@@ -35,6 +35,7 @@ dependencies {
 
 	implementation 'org.springframework.boot:spring-boot-starter-jdbc' // 선택: 코드로 쿼리 테스트 시 권장
 	runtimeOnly 'com.h2database:h2'
+	runtimeOnly 'com.mysql:mysql-connector-j'
 	developmentOnly 'org.springframework.boot:spring-boot-h2console' // H2는 런타임 의존성으로 추가
 }
 

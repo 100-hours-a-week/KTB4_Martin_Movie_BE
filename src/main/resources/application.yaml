@@ -2,12 +2,6 @@ spring:
   application:
     name: workapi
 
-  datasource:
-    url: jdbc:h2:mem:workapi;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
-
   servlet:
     multipart:
       max-file-size: 5MB
@@ -15,17 +9,9 @@ spring:
 
 
   profiles:
-    active: development
-
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
+    active: ${SPRING_PROFILES_ACTIVE:development}
 
   jpa:
-    hibernate:
-      ddl-auto: create-drop
-    show-sql: true
     open-in-view: false
 
 jwt:
