@@ -7,17 +7,20 @@ import com.homework4.workapi.dto.post.request.UpdatePostRequest;
 import com.homework4.workapi.dto.post.response.PostsPreviewResponse;
 import com.homework4.workapi.entity.Post;
 import com.homework4.workapi.entity.PostLike;
+import com.homework4.workapi.entity.PostView;
 import com.homework4.workapi.entity.User;
 import com.homework4.workapi.projection.CommentCountProjection;
 import com.homework4.workapi.repository.CommentRepository;
 import com.homework4.workapi.repository.PostLikeRepository;
 import com.homework4.workapi.repository.PostRepository;
+import com.homework4.workapi.repository.PostViewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -30,6 +33,7 @@ public class PostService {
     private final PostLikeRepository postLikeRepository;
     private final CommentRepository commentRepository;
     private final FileService fileService;
+    private final PostViewRepository postViewRepository;
 
     @Transactional
     public PostResponse addPost(Long userId, PostRequest postRequest) {
@@ -131,8 +135,6 @@ public class PostService {
     public PostResponse getPost(Long postId, Long userId) {
         Post post = findPostById(postId);
 
-        post.viewCountIncrease();
-
         int commentCount = commentRepository.countByPost_Id(postId);
 
         boolean liked = postLikeRepository
@@ -198,6 +200,32 @@ public class PostService {
             post.likeDecrease();
         }
         return new PostLikeResponse(post.getLikeCount(), false);
+    }
+
+    @Transactional
+    public long updatePostView(Long postId, Long userId) {
+        Post post = findPostById(postId);
+        User user = userService.findUserById(userId);
+
+        LocalDate today = LocalDate.now();
+        Optional<PostView> existingView = postViewRepository.findByPost_IdAndUser_Id(postId, userId);
+
+        if (existingView.isEmpty()) {
+            PostView postView = new PostView(post, user, today);
+            postViewRepository.save(postView);
+            post.viewCountIncrease();
+
+            return post.getViewCount();
+        }
+
+        PostView postView = existingView.get();
+
+        if (!postView.hasViewedOn(today)) {
+            postView.updateViewAt(today);
+            post.viewCountIncrease();
+        }
+
+        return post.getViewCount();
     }
 
     public Post findPostById(Long postId) {

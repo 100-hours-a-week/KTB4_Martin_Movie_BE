@@ -81,4 +81,11 @@ public class PostController {
         PostLikeResponse response = postService.unlikePost(postId, userId);
         return new CommonResponse<>("좋아요를 취소하였습니다.", response);
     }
+
+    @PostMapping("/{postId}/views")
+    public CommonResponse<Long> updatePostView(@PathVariable Long postId, @AuthenticationPrincipal Long userId) {
+        long viewCount = postService.updatePostView(postId, userId);
+
+        return new CommonResponse<>("조회수가 반영되었습니다.", viewCount);
+    }
 }

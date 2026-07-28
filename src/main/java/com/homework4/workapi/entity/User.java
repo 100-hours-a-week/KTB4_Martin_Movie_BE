@@ -12,11 +12,18 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(unique = true,  nullable = false, length = 10)
+    private String username;
+
+    @Column(unique = true,  nullable = false, length = 255)
+    private String email;
+
+    @Column(nullable = false)
+    private String password;
+
     private boolean deleted = false;
     private LocalDateTime deletedAt;
-    private String username;
-    private String password;
-    private String email;
     private String profileImageUrl;
 
     protected User(){

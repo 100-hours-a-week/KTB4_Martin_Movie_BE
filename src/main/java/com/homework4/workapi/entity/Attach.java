@@ -18,13 +18,16 @@ public class Attach {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id")
+    @JoinColumn(name = "post_id", nullable = false)
     private Post post;
 
-    @Column(name = "upload_key", nullable = false, updatable = false, length = 36)
+    @Column(nullable = false, updatable = false, length = 36)
     private String uploadKey;
 
+    @Column(nullable = false)
     private String attachUrl;
+
+    @Column(nullable = false)
     private LocalDateTime attachTime;
 
     protected Attach(){}

@@ -11,20 +11,25 @@ public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false, length = 1000)
     private String content;
+
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createTime;
+
     private LocalDateTime updateTime;
 
     protected Comment() {
     }
 
     @ManyToOne(fetch = FetchType.LAZY)
-            @JoinColumn(name = "post_id")
-            private Post post;
+    @JoinColumn(name = "post_id", nullable = false)
+    private Post post;
 
     @ManyToOne(fetch = FetchType.LAZY)
-            @JoinColumn(name = "user_id")
-            private User user;
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     public Comment(User user, Post post, String content) {
         this.user = user;

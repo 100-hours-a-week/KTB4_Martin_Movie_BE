@@ -16,27 +16,36 @@ public class Post {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private int likeCount;
+    @Column(nullable = false, length = 100)
     private String title;
+
+    @Column(nullable = false, length = 5000)
     private String content;
+
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createTime;
+
+    private int likeCount;
     private LocalDateTime updateTime;
     private long viewCount;
-    private Integer rating;
+    private int rating;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @OneToMany(mappedBy = "post", orphanRemoval = true)
+    @OneToMany(mappedBy = "post", orphanRemoval = true, cascade = CascadeType.ALL)
     @BatchSize(size = 20)
     private List<Attach> attaches = new ArrayList<>();
 
-    @OneToMany(mappedBy = "post", orphanRemoval = true)
+    @OneToMany(mappedBy = "post", orphanRemoval = true, cascade = CascadeType.ALL)
     private List<Comment> comments = new ArrayList<>();
 
-    @OneToMany(mappedBy = "post", orphanRemoval = true)
+    @OneToMany(mappedBy = "post", orphanRemoval = true, cascade = CascadeType.ALL)
     private List<PostLike> postLikes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "post", orphanRemoval = true, cascade = CascadeType.ALL)
+    private List<PostView> postViews = new ArrayList<>();
 
     protected Post() {}
 
@@ -45,8 +54,6 @@ public class Post {
         this.title = title;
         this.content = content;
         this.createTime = LocalDateTime.now();
-        this.likeCount = 0;
-        this.viewCount = 0;
         this.updateTime = LocalDateTime.now();
         this.rating = rating;
     }
