@@ -14,6 +14,11 @@ spring:
   jpa:
     open-in-view: false
 
+aws:
+  s3:
+    bucket: ${AWS_S3_BUCKET:mypros3-696254624810-ap-southeast-2-an}
+    region: ${AWS_REGION:ap-southeast-2}
+
 jwt:
   secret: 3W8i2bTUFAf+rQtb6SV01OHnNEpqlntH/wfO770lw/gm3n2onNxHNNtbik6mNux7aNlMD0jsZHzdE2mYZe8vlA==
   access-token-exp-seconds: 300 #토큰 만료 시간

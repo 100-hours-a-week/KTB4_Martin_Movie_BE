@@ -1,64 +1,53 @@
 package com.homework4.workapi.service;
 
+import com.homework4.workapi.validation.ImageValidator;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
+import java.net.URI;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class FileService {
 
-    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;
-    private static final List<String> ALLOWED_EXTENSIONS =
-            List.of(".jpg", ".jpeg", ".png", ".gif", ".webp");
+    private static final String IMAGE_PREFIX = "images/";
 
-    private final Path uploadDir =
-            Path.of(System.getProperty("user.home"), "workapi-uploads");
+    private final S3Client s3Client;
+
+    @Value("${aws.s3.bucket}")
+    private String bucket;
+
+    @Value("${aws.s3.region}")
+    private String region;
 
     public String saveImage(MultipartFile file) {
-        validateImage(file);
-
-        String extension = getExtension(file.getOriginalFilename());
+        String extension = ImageValidator.validateAndGetExtension(file);
         String savedFilename = UUID.randomUUID() + extension;
-        Path targetPath = uploadDir.resolve(savedFilename);
+        String objectKey = IMAGE_PREFIX + savedFilename;
+
+        PutObjectRequest request = PutObjectRequest.builder()
+                .bucket(bucket)
+                .key(objectKey)
+                .contentType(file.getContentType())
+                .build();
 
         try {
-            Files.createDirectories(uploadDir);
-            file.transferTo(targetPath);
-        } catch (IOException exception) {
-            throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    "파일 저장에 실패했습니다."
-            );
+            s3Client.putObject(request, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
+        } catch (IOException | S3Exception exception) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "파일 저장에 실패했습니다.");
         }
 
-        return "/images/" + savedFilename;
-    }
-
-    private void validateImage(MultipartFile file) {
-        if (file.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "파일이 비어 있습니다.");
-        }
-
-        if (file.getSize() > MAX_FILE_SIZE) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "파일 크기는 5MB 이하만 가능합니다.");
-        }
-
-        String contentType = file.getContentType();
-        if (contentType == null || !contentType.startsWith("image/")) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이미지 파일만 업로드할 수 있습니다.");
-        }
-
-        String extension = getExtension(file.getOriginalFilename());
-        if (!ALLOWED_EXTENSIONS.contains(extension)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "지원하지 않는 이미지 형식입니다.");
-        }
+        return "https://" + bucket + ".s3." + region + ".amazonaws.com/" + objectKey;
     }
 
     public void deleteImage(String imageUrl) {
@@ -66,29 +55,33 @@ public class FileService {
             return;
         }
 
-        String filename = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
-        Path filePath = uploadDir.resolve(filename).normalize();
-
-        if (!filePath.startsWith(uploadDir)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "잘못된 파일 경로입니다.");
-        }
+        String objectKey = extractObjectKey(imageUrl);
 
         try {
-            Files.deleteIfExists(filePath);
-        } catch (IOException exception) {
-            throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    "파일 삭제에 실패했습니다."
-            );
+            s3Client.deleteObject(request -> request.bucket(bucket).key(objectKey));
+        } catch (S3Exception exception) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "파일 삭제에 실패했습니다.");
         }
     }
 
+    private String extractObjectKey(String imageUrl) {
+        String path;
 
-    private String getExtension(String filename) {
-        if (filename == null || !filename.contains(".")) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "파일 확장자가 없습니다.");
+        try {
+            URI uri = URI.create(imageUrl);
+            path = uri.isAbsolute() ? uri.getPath() : imageUrl;
+        } catch (IllegalArgumentException exception) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "잘못된 이미지 주소입니다.");
         }
 
-        return filename.substring(filename.lastIndexOf(".")).toLowerCase();
+        if (path.startsWith("/")) {
+            path = path.substring(1);
+        }
+
+        if (!path.startsWith(IMAGE_PREFIX) || path.contains("..") || path.contains("\\")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "잘못된 이미지 경로입니다.");
+        }
+
+        return path;
     }
 }
