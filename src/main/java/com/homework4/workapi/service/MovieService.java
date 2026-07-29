@@ -40,7 +40,7 @@ public class MovieService {
 
     public List<MoviePreviewResponse> getMoviePreviews() {
         return movieRepository
-                .findTop4ByOrderByReleaseDateDescIdDesc()
+                .findTop5ByOrderByReleaseDateDescIdDesc()
                 .stream()
                 .map(MoviePreviewResponse::new)
                 .toList();
