@@ -1,6 +1,7 @@
 package com.homework4.workapi.service;
 
 import com.homework4.workapi.dto.common.CommonResponse;
+import com.homework4.workapi.dto.movie.response.MoviePreviewResponse;
 import com.homework4.workapi.dto.movie.response.MovieResponse;
 import com.homework4.workapi.dto.movie.response.MoviesResponse;
 import com.homework4.workapi.entity.Movie;
@@ -14,6 +15,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -32,7 +35,14 @@ public class MovieService {
         Pageable pageable = PageRequest.of(page - 1, PAGE_SIZE,
                 Sort.by(Sort.Order.desc("releaseDate"), Sort.Order.desc("id"))
         );
-
         return movieRepository.findAll(pageable).map(MoviesResponse::new);
+    }
+
+    public List<MoviePreviewResponse> getMoviePreviews() {
+        return movieRepository
+                .findTop4ByOrderByReleaseDateDescIdDesc()
+                .stream()
+                .map(MoviePreviewResponse::new)
+                .toList();
     }
 }
