@@ -1,0 +1,21 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: martin-backend
+    env_file: /etc/workapi/workapi.env
+    environment:
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx384m"
+      AWS_EC2_METADATA_V1_DISABLED: "true"
+    expose: ["8080"]
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ${FRONTEND_CONTEXT:-../frontend}
+      dockerfile: Dockerfile
+    container_name: martin-frontend
+    ports: ["80:80"]
+    depends_on: ["backend"]
+    restart: unless-stopped

@@ -1,0 +1,10 @@
+.gradle
+build
+.git
+.gitignore
+.idea
+.vscode
+*.iml
+.env
+*.log
+workapi-uploads
