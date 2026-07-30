@@ -17,6 +17,11 @@ public class MoviesResponse {
     private final LocalDate releaseDate;
     private final String certification;
     private final BigDecimal rating;
+    private final int runningTime;
+    private final String genre;
+    private final String overview;
+    private final String director;
+    private final int ranking;
 
     public MoviesResponse(Movie movie) {
         this.id = movie.getId();
@@ -25,5 +30,10 @@ public class MoviesResponse {
         this.releaseDate = movie.getReleaseDate();
         this.certification = movie.getCertification();
         this.rating = movie.getTmdbRating();
+        this.runningTime = movie.getRunningTime();
+        this.genre = movie.getGenre();
+        this.overview = movie.getOverview();
+        this.director = movie.getDirector();
+        this.ranking = movie.getRanking();
     }
 }

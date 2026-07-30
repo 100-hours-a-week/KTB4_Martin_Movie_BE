@@ -23,7 +23,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class MovieService {
 
-    private static final int PAGE_SIZE = 20;
+    private static final int PAGE_SIZE = 9;
 
     private final MovieRepository movieRepository;
 
@@ -33,7 +33,7 @@ public class MovieService {
         }
 
         Pageable pageable = PageRequest.of(page - 1, PAGE_SIZE,
-                Sort.by(Sort.Order.desc("releaseDate"), Sort.Order.desc("id"))
+                Sort.by(Sort.Order.asc("ranking"), Sort.Order.asc("id"))
         );
         return movieRepository.findAll(pageable).map(MoviesResponse::new);
     }
