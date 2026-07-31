@@ -9,7 +9,8 @@ services:
     env_file:
       - /etc/workapi/workapi.env
     environment:
-      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx384m"
+      TZ: Asia/Seoul
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx384m -Duser.timezone=Asia/Seoul"
       AWS_EC2_METADATA_V1_DISABLED: "true"
     expose:
       - "8080"
