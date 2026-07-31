@@ -20,7 +20,12 @@ FROM eclipse-temurin:26-jre AS runtime
 
 WORKDIR /app
 
-RUN groupadd --system spring && useradd --system --gid spring spring
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN groupadd --system spring \
+    && useradd --system --gid spring spring
 
 COPY --from=build --chown=spring:spring /app/build/libs/*.jar app.jar
 
