@@ -45,4 +45,14 @@ public class MovieService {
                 .map(MoviePreviewResponse::new)
                 .toList();
     }
+
+    public MovieResponse getMovie(Long movieId) {
+        Movie movie = movieRepository.findById(movieId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "영화를 찾을 수 없습니다."
+                ));
+
+        return new MovieResponse(movie);
+    }
 }

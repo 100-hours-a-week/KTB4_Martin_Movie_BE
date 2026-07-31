@@ -46,8 +46,7 @@ public class SecurityConfig {
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.GET, "/images/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/posts/preview").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/movies").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/movies/preview").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/movies", "/movies/**").permitAll()
                         .anyRequest().authenticated()
 
                 )

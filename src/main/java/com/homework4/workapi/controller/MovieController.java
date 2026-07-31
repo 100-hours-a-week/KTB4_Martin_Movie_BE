@@ -29,4 +29,10 @@ public class MovieController {
         List<MoviePreviewResponse> movies = movieService.getMoviePreviews();
         return new CommonResponse<>("홈 영화 정보를 조회하였습니다.", movies);
     }
+
+    @GetMapping("/{movieId}")
+    public CommonResponse<MovieResponse> getMovie(@PathVariable Long movieId) {
+        MovieResponse movie = movieService.getMovie(movieId);
+        return new CommonResponse<>("영화 상세 정보를 조회하였습니다.", movie);
+    }
 }

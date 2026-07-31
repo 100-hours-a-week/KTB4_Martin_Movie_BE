@@ -1,44 +1,45 @@
 package com.homework4.workapi.dto.movie.response;
 
 import com.homework4.workapi.entity.Movie;
-import com.homework4.workapi.entity.Post;
-import jakarta.persistence.Column;
 import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 @Getter
 public class MovieResponse {
 
+    private static final String POSTER_BASE_URL =
+            "https://image.tmdb.org/t/p/w500";
 
-    private static final String POSTER_BASE_URL = "https://image.tmdb.org/t/p/w500";
     private final Long id;
+    private final Long tmdbId;
     private final String title;
-    private final String posterPath;
+    private final String posterUrl;
+    private final int runningTime;
     private final LocalDate releaseDate;
     private final String certification;
     private final String genre;
     private final String overview;
     private final String director;
-    private final BigDecimal tmdbRating;
+    private final BigDecimal rating;
     private final List<String> actors;
-    private final int runningTime;
+    private final int ranking;
 
     public MovieResponse(Movie movie) {
         this.id = movie.getId();
+        this.tmdbId = movie.getTmdbId();
         this.title = movie.getTitle();
-        this.posterPath = POSTER_BASE_URL + movie.getPosterPath();
+        this.posterUrl = POSTER_BASE_URL + movie.getPosterPath();
+        this.runningTime = movie.getRunningTime();
         this.releaseDate = movie.getReleaseDate();
         this.certification = movie.getCertification();
         this.genre = movie.getGenre();
         this.overview = movie.getOverview();
         this.director = movie.getDirector();
-        this.tmdbRating = movie.getTmdbRating();
-        this.actors = movie.getActors();
-        this.runningTime = movie.getRunningTime();
+        this.rating = movie.getTmdbRating();
+        this.actors = List.copyOf(movie.getActors());
+        this.ranking = movie.getRanking();
     }
-
 }
