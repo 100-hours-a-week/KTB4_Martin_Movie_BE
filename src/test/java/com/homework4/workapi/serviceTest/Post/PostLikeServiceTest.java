@@ -53,8 +53,8 @@ class PostLikeServiceTest {
 
         PostLikeResponse response = postService.likePost(postId, userId);
 
-        assertEquals(1, response.getLikeCount());
-        assertTrue(response.isLiked());
+        assertEquals(1, response.likeCount());
+        assertTrue(response.liked());
 
         verify(postRepository, times(1)).findById(postId);
         verify(userService, times(1)).findUserById(userId);
@@ -80,8 +80,8 @@ class PostLikeServiceTest {
 
         PostLikeResponse response = postService.likePost(postId, userId);
 
-        assertEquals(1, response.getLikeCount());
-        assertTrue(response.isLiked());
+        assertEquals(1, response.likeCount());
+        assertTrue(response.liked());
 
         verify(postLikeRepository, never()).save(any(PostLike.class));
     }
@@ -126,8 +126,8 @@ class PostLikeServiceTest {
 
         PostLikeResponse response = postService.unlikePost(postId, userId);
 
-        assertEquals(0, response.getLikeCount());
-        assertFalse(response.isLiked());
+        assertEquals(0, response.likeCount());
+        assertFalse(response.liked());
 
         verify(postLikeRepository, times(1)).delete(postLike);
     }
@@ -148,8 +148,8 @@ class PostLikeServiceTest {
 
         PostLikeResponse response = postService.unlikePost(postId, userId);
 
-        assertEquals(0, response.getLikeCount());
-        assertFalse(response.isLiked());
+        assertEquals(0, response.likeCount());
+        assertFalse(response.liked());
 
         verify(postLikeRepository, never()).delete(any(PostLike.class));
     }

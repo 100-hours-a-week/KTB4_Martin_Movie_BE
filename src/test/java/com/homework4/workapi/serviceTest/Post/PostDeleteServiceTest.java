@@ -63,11 +63,11 @@ class PostDeleteServiceTest {
 
         PostResponse response = postService.deletePost(postId, userId);
 
-        assertEquals(postId, response.getId());
-        assertEquals("제목", response.getTitle());
-        assertEquals("내용", response.getContent());
-        assertEquals(userId, response.getUserId());
-        assertEquals("kim", response.getUsername());
+        assertEquals(postId, response.id());
+        assertEquals("제목", response.title());
+        assertEquals("내용", response.content());
+        assertEquals(userId, response.userId());
+        assertEquals("kim", response.username());
 
 
         verify(postRepository, times(1)).findById(postId);

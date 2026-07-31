@@ -32,7 +32,7 @@ public class CommentService {
         Comment comment = new Comment(user, post, commentRequest.content());
 
         Comment savedComment = commentRepository.save(comment);
-        return new CommentResponse(savedComment);
+        return CommentResponse.from(savedComment);
     }
 
     public List<CommentResponse> getComments(Long postId) {
@@ -42,7 +42,7 @@ public class CommentService {
         List<CommentResponse> responses = new ArrayList<>();
 
         for (Comment comment : comments) {
-            responses.add(new CommentResponse(comment));
+            responses.add(CommentResponse.from(comment));
         }
 
         return responses;
@@ -71,7 +71,7 @@ public class CommentService {
         }
 
         comment.updateComment(commentRequest.content());
-        return new  CommentResponse(comment);
+        return CommentResponse.from(comment);
     }
 
     public Comment findCommentById(Long commentId) {

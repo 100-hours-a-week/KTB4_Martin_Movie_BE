@@ -35,14 +35,14 @@ public class MovieService {
         Pageable pageable = PageRequest.of(page - 1, PAGE_SIZE,
                 Sort.by(Sort.Order.asc("ranking"), Sort.Order.asc("id"))
         );
-        return movieRepository.findAll(pageable).map(MoviesResponse::new);
+        return movieRepository.findAll(pageable).map(MoviesResponse::from);
     }
 
     public List<MoviePreviewResponse> getMoviePreviews() {
         return movieRepository
                 .findTop5ByOrderByReleaseDateDescIdDesc()
                 .stream()
-                .map(MoviePreviewResponse::new)
+                .map(MoviePreviewResponse::from)
                 .toList();
     }
 
@@ -53,6 +53,6 @@ public class MovieService {
                         "영화를 찾을 수 없습니다."
                 ));
 
-        return new MovieResponse(movie);
+        return MovieResponse.from(movie);
     }
 }

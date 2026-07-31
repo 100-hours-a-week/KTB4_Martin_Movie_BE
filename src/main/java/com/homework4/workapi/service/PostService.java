@@ -40,7 +40,7 @@ public class PostService {
         User user = userService.findUserById(userId);
         Post post = new Post(user, postRequest.title(), postRequest.content(), postRequest.rating());
         Post savedPost = postRepository.save(post);
-        return new PostResponse(savedPost, 0, false);
+        return PostResponse.from(savedPost, 0, false);
     }
 
     @Transactional
@@ -73,7 +73,7 @@ public class PostService {
                                     0
                             );
 
-                    return new PostsPreviewResponse(
+                    return PostsPreviewResponse.from(
                             post,
                             commentCount
                     );
@@ -122,7 +122,7 @@ public class PostService {
                     boolean liked =
                             likedPostIds.contains(post.getId());
 
-                    return new PostResponse(
+                    return PostResponse.from(
                             post,
                             commentCount,
                             liked
@@ -141,7 +141,7 @@ public class PostService {
                 .findByPost_IdAndUser_Id(postId, userId)
                 .isPresent();
 
-        return new PostResponse(post, commentCount, liked);
+        return PostResponse.from(post, commentCount, liked);
     }
 
     @Transactional
@@ -157,7 +157,7 @@ public class PostService {
 
         postRepository.delete(post);
 
-        return new PostResponse(post, 0, false);
+        return PostResponse.from(post, 0, false);
     }
 
     @Transactional
@@ -168,7 +168,7 @@ public class PostService {
         }
         post.update(postRequest.title(), postRequest.content(), postRequest.rating());
         int commentCount = commentRepository.countByPost_Id(postId);
-        return new PostResponse(post, commentCount, false);
+        return PostResponse.from(post, commentCount, false);
     }
 
     @Transactional

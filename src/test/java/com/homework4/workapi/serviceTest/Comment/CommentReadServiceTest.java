@@ -59,14 +59,14 @@ class CommentReadServiceTest {
 
         assertEquals(2, responses.size());
 
-        assertEquals(100L, responses.get(0).getId());
-        assertEquals(postId, responses.get(0).getPostId());
-        assertEquals(2L, responses.get(0).getUserId());
-        assertEquals("kim", responses.get(0).getUsername());
-        assertEquals("댓글1", responses.get(0).getContent());
+        assertEquals(100L, responses.get(0).id());
+        assertEquals(postId, responses.get(0).postId());
+        assertEquals(2L, responses.get(0).userId());
+        assertEquals("kim", responses.get(0).username());
+        assertEquals("댓글1", responses.get(0).content());
 
-        assertEquals(101L, responses.get(1).getId());
-        assertEquals("댓글2", responses.get(1).getContent());
+        assertEquals(101L, responses.get(1).id());
+        assertEquals("댓글2", responses.get(1).content());
 
         verify(postService, times(1)).findPostById(postId);
         verify(commentRepository, times(1)).findByPostIdWithUser(postId);

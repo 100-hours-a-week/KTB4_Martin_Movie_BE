@@ -49,10 +49,10 @@ public class PostAddServiceTest {
         PostResponse response = postService.addPost(userId, request);
 
         assertNotNull(response);
-        assertEquals("테스트 제목", response.getTitle());
-        assertEquals("테스트 내용", response.getContent());
-        assertEquals(8, response.getRating());
-        assertEquals(userId, response.getUserId());
+        assertEquals("테스트 제목", response.title());
+        assertEquals("테스트 내용", response.content());
+        assertEquals(8, response.rating());
+        assertEquals(userId, response.userId());
 
         verify(postRepository).save(argThat(post ->
                 post.getRating() == 8

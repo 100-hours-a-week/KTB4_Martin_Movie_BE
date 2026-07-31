@@ -61,10 +61,10 @@ public class UserLoginServiceTest {
 
         // then
         assertNotNull(result);
-        assertEquals("access-token", result.getResponse().getToken().getAccessToken());
-        assertEquals("refresh-token", result.getRefreshToken());
-        assertEquals("kim", result.getResponse().getUser().getUsername());
-        assertEquals("kim@test.com", result.getResponse().getUser().getEmail());
+        assertEquals("access-token", result.response().token().accessToken());
+        assertEquals("refresh-token", result.refreshToken());
+        assertEquals("kim", result.response().user().username());
+        assertEquals("kim@test.com", result.response().user().email());
 
         verify(userRepository, times(1)).findByEmailAndDeletedFalse("kim@test.com");
         verify(passwordEncoder, times(1)).matches("Test1234!", "encodedPassword");

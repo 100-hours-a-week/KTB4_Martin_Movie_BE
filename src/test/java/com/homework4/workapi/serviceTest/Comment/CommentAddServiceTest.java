@@ -60,11 +60,11 @@ class CommentAddServiceTest {
 
         CommentResponse response = commentService.addComment(request, postId, userId);
 
-        assertEquals(100L, response.getId());
-        assertEquals(postId, response.getPostId());
-        assertEquals(userId, response.getUserId());
-        assertEquals("kim", response.getUsername());
-        assertEquals("댓글 내용", response.getContent());
+        assertEquals(100L, response.id());
+        assertEquals(postId, response.postId());
+        assertEquals(userId, response.userId());
+        assertEquals("kim", response.username());
+        assertEquals("댓글 내용", response.content());
 
         verify(userService).findUserById(userId);
         verify(postService).findPostById(postId);

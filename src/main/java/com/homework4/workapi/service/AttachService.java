@@ -35,7 +35,7 @@ public class AttachService {
                 attachRepository.findByPost_IdAndUploadKey(postId, uploadKey.toString());
 
         if (existingAttach.isPresent()) {
-            return new AttachResponse(existingAttach.get());
+            return AttachResponse.from(existingAttach.get());
         }
 
         String attachUrl = fileService.saveImage(file);
@@ -43,7 +43,7 @@ public class AttachService {
 
         Attach savedAttach = attachRepository.save(attach);
 
-        return new AttachResponse(savedAttach);
+        return AttachResponse.from(savedAttach);
     }
 
     public List<AttachResponse> getAttaches(Long postId) {
@@ -53,7 +53,7 @@ public class AttachService {
         List<AttachResponse> responses = new ArrayList<>();
 
         for (Attach attach : attaches) {
-            responses.add(new AttachResponse(attach));
+            responses.add(AttachResponse.from(attach));
         }
 
         return responses;
@@ -77,6 +77,6 @@ public class AttachService {
         fileService.deleteImage(attach.getAttachUrl());
         attachRepository.delete(attach);
 
-        return new AttachResponse(attach);
+        return AttachResponse.from(attach);
     }
 }

@@ -56,10 +56,10 @@ class AttachDeleteServiceTest {
 
         AttachResponse response = attachService.deleteAttach(attachId, userId);
 
-        assertEquals(attachId, response.getId());
-        assertEquals(postId, response.getPostId());
+        assertEquals(attachId, response.id());
+        assertEquals(postId, response.postId());
 
-        assertEquals("/images/test.png", response.getAttachUrl());
+        assertEquals("/images/test.png", response.attachUrl());
 
         verify(attachRepository).findById(attachId);
 

@@ -52,7 +52,7 @@ public class UserUpdateServiceTest {
 
         UserResponse response = userService.updateUser(userId, request);
 
-        assertEquals("kim", response.getUsername());
+        assertEquals("kim", response.username());
 
         verify(userRepository, times(1)).findById(userId);
         verify(userRepository, times(1)).existsByUsername("kim");
@@ -73,7 +73,7 @@ public class UserUpdateServiceTest {
 
         UserResponse response = userService.updateUser(userId, request);
 
-        assertEquals("lee", response.getUsername());
+        assertEquals("lee", response.username());
 
         verify(userRepository, times(1)).findById(userId);
         verify(userRepository, times(1)).existsByUsername("lee");
@@ -138,8 +138,8 @@ public class UserUpdateServiceTest {
         UserResponse response = userService.updatePassword(1L, request);
 
         // then
-        assertEquals("kim", response.getUsername());
-        assertEquals("kim@test.com", response.getEmail());
+        assertEquals("kim", response.username());
+        assertEquals("kim@test.com", response.email());
         assertEquals("newEncodedPassword", user.getPassword());
 
         verify(userRepository, times(1)).findById(1L);

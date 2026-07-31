@@ -56,7 +56,7 @@ public class UserService {
         User user = new User(signupRequest.username(), signupRequest.email(), passwordEncoder.encode(signupRequest.password()), profileImageUrl);
 
         User savedUser = userRepository.save(user);
-        return new UserResponse(savedUser);
+        return UserResponse.from(savedUser);
     }
 
     @Transactional
@@ -90,7 +90,7 @@ public class UserService {
         );
 
         return new LoginResult(
-                LoginResponse.of(new UserResponse(user), accessToken, jwtProvider.getAccessTokenValidityInMilliseconds()),
+                LoginResponse.of(UserResponse.from(user), accessToken, jwtProvider.getAccessTokenValidityInMilliseconds()),
                 refreshToken
         );
     }
@@ -151,7 +151,7 @@ public class UserService {
         }
 
         user.updateUsername(newUsername);
-        return new UserResponse(user);
+        return UserResponse.from(user);
     }
 
     @Transactional
@@ -171,7 +171,7 @@ public class UserService {
 
         user.softDelete();
         refreshTokenRepository.deleteByUserId(userId);
-        return new UserResponse(user);
+        return UserResponse.from(user);
     }
 
     @Transactional
@@ -179,7 +179,7 @@ public class UserService {
         User user = findUserById(userId);
         user.updatePassword(passwordEncoder.encode(updatePasswordRequest.newPassword()));
         refreshTokenRepository.deleteByUserId(userId);
-        return new UserResponse(user);
+        return UserResponse.from(user);
     }
 
     @Transactional
@@ -194,7 +194,7 @@ public class UserService {
             fileService.deleteImage(previousProfileImageUrl);
         }
 
-        return new UserResponse(user);
+        return UserResponse.from(user);
     }
 
     @Transactional
@@ -205,7 +205,7 @@ public class UserService {
         fileService.deleteImage(PreviousProfileImageUrl);
         user.removeProfileImage();
 
-        return new UserResponse(user);
+        return UserResponse.from(user);
     }
 
     public User findUserById(Long userId) {

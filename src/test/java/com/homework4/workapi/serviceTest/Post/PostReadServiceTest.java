@@ -62,10 +62,10 @@ class PostReadServiceTest {
                 postService.getPosts(userId);
 
         assertEquals(2, responses.size());
-        assertEquals(2, responses.get(0).getCommentCount());
-        assertEquals(0, responses.get(1).getCommentCount());
-        assertTrue(responses.get(0).isLiked());
-        assertFalse(responses.get(1).isLiked());
+        assertEquals(2, responses.get(0).commentCount());
+        assertEquals(0, responses.get(1).commentCount());
+        assertTrue(responses.get(0).liked());
+        assertFalse(responses.get(1).liked());
 
         verify(postRepository).findAllWithUserAndAttaches();
         verify(commentRepository).countByPostIds(List.of(10L, 20L));
@@ -87,10 +87,10 @@ class PostReadServiceTest {
 
         PostResponse response = postService.getPost(postId, userId);
 
-        assertEquals(postId, response.getId());
-        assertEquals("제목", response.getTitle());
-        assertEquals(3, response.getCommentCount());
-        assertFalse(response.isLiked());
+        assertEquals(postId, response.id());
+        assertEquals("제목", response.title());
+        assertEquals(3, response.commentCount());
+        assertFalse(response.liked());
     }
 
     @Test
@@ -109,8 +109,8 @@ class PostReadServiceTest {
 
         PostResponse response = postService.getPost(postId, userId);
 
-        assertTrue(response.isLiked());
-        assertEquals(1, response.getCommentCount());
+        assertTrue(response.liked());
+        assertEquals(1, response.commentCount());
     }
 
     @Test

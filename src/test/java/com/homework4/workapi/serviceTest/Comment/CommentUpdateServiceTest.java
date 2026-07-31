@@ -56,11 +56,11 @@ class CommentUpdateServiceTest {
 
         CommentResponse response = commentService.updateComment(commentId, request, postId, userId);
 
-        assertEquals(commentId, response.getId());
-        assertEquals(postId, response.getPostId());
-        assertEquals(userId, response.getUserId());
-        assertEquals("kim", response.getUsername());
-        assertEquals("수정 댓글", response.getContent());
+        assertEquals(commentId, response.id());
+        assertEquals(postId, response.postId());
+        assertEquals(userId, response.userId());
+        assertEquals("kim", response.username());
+        assertEquals("수정 댓글", response.content());
 
         verify(commentRepository, times(1)).findById(commentId);
         verify(commentRepository, never()).save(any(Comment.class));

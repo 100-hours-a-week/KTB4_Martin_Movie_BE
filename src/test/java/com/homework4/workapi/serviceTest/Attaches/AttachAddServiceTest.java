@@ -62,10 +62,10 @@ public class AttachAddServiceTest {
                 .thenReturn(Optional.empty());
 
         AttachResponse response = attachService.addAttach(postId, userId, uploadKey, file);
-        assertEquals(100L, response.getId());
-        assertEquals(postId, response.getPostId());
+        assertEquals(100L, response.id());
+        assertEquals(postId, response.postId());
 
-        assertEquals("/images/test.png", response.getAttachUrl());
+        assertEquals("/images/test.png", response.attachUrl());
 
         verify(postService).findPostById(postId);
         verify(fileService).saveImage(file);
@@ -130,7 +130,7 @@ public class AttachAddServiceTest {
                 new MockMultipartFile("file", "poster.png", "image/png", new byte[1])
         );
 
-        assertEquals(100L, response.getId());
+        assertEquals(100L, response.id());
         verifyNoInteractions(fileService);
         verify(attachRepository, never()).save(any());
     }

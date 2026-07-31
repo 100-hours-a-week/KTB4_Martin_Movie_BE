@@ -55,8 +55,8 @@ class PostUpdateServiceTest {
         assertEquals("수정 제목", post.getTitle());
         assertEquals("수정 내용", post.getContent());
         assertEquals(9, post.getRating());
-        assertEquals(9, response.getRating());
-        assertEquals(2, response.getCommentCount());
+        assertEquals(9, response.rating());
+        assertEquals(2, response.commentCount());
     }
     @Test
     @DisplayName("게시글 수정 fail - 게시글이 존재하지 않으면 수정에 실패한다")

@@ -39,7 +39,7 @@ public class UserController {
         LoginResult result = userService.login(loginRequest);
 
         ResponseCookie refreshCookie = ResponseCookie
-                .from("refreshToken", result.getRefreshToken())
+                .from("refreshToken", result.refreshToken())
                 .httpOnly(true)
                 .secure(false)
                 .path("/")
@@ -51,7 +51,7 @@ public class UserController {
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(new CommonResponse<>("로그인에 성공하였습니다.", result.getResponse()));
+                .body(new CommonResponse<>("로그인에 성공하였습니다.", result.response()));
     }
 
     @PostMapping("/token/refresh")
@@ -62,8 +62,8 @@ public class UserController {
         TokenResult result = userService.refreshAccessToken(refreshToken);
 
         // Refresh Token 회전 시 새 쿠키 세팅
-        if (result.getNewRefreshToken() != null) {
-            ResponseCookie cookie = ResponseCookie.from("refreshToken", result.getNewRefreshToken())
+        if (result.newRefreshToken() != null) {
+            ResponseCookie cookie = ResponseCookie.from("refreshToken", result.newRefreshToken())
                     .httpOnly(true)
                     .secure(false)
                     .path("/")
@@ -75,7 +75,7 @@ public class UserController {
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(new CommonResponse<>("로그인 성공", result.getToken()));
+                .body(new CommonResponse<>("로그인 성공", result.token()));
     }
 
     @PostMapping("/logout")

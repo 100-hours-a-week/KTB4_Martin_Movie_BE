@@ -59,13 +59,13 @@ class AttachReadServiceTest {
 
         assertEquals(2, responses.size());
 
-        assertEquals(100L, responses.get(0).getId());
+        assertEquals(100L, responses.get(0).id());
 
-        assertEquals("/images/first.png", responses.get(0).getAttachUrl());
+        assertEquals("/images/first.png", responses.get(0).attachUrl());
 
-        assertEquals(200L, responses.get(1).getId());
+        assertEquals(200L, responses.get(1).id());
 
-        assertEquals("/images/second.png", responses.get(1).getAttachUrl());
+        assertEquals("/images/second.png", responses.get(1).attachUrl());
 
         verify(postService).findPostById(postId);
         verify(attachRepository).findByPost_Id(postId);

@@ -41,8 +41,8 @@ public class UserSignupServiceTest {
 
         UserResponse response = userService.signup(request);
 
-        assertEquals("kim", response.getUsername());
-        assertEquals("kim@test.com", response.getEmail());
+        assertEquals("kim", response.username());
+        assertEquals("kim@test.com", response.email());
 
         verify(passwordEncoder).encode("Test1234!");
         verify(userRepository).save(any(User.class));
