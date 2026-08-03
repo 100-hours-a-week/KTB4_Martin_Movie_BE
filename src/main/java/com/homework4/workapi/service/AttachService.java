@@ -5,6 +5,7 @@ import com.homework4.workapi.entity.Attach;
 import com.homework4.workapi.entity.Post;
 import com.homework4.workapi.repository.AttachRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +32,7 @@ public class AttachService {
         if(!post.isWritten(userId)){
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "게시글 작성자만 첨부파일을 첨부 할 수 있습니다.");
         }
+
         Optional<Attach> existingAttach =
                 attachRepository.findByPost_IdAndUploadKey(postId, uploadKey.toString());
 
@@ -38,12 +40,20 @@ public class AttachService {
             return AttachResponse.from(existingAttach.get());
         }
 
-        String attachUrl = fileService.saveImage(file);
-        Attach attach = new Attach(post, attachUrl, uploadKey.toString());
+        String uploadedUrl = fileService.saveImage(file);
 
-        Attach savedAttach = attachRepository.save(attach);
+        Attach attach = new Attach(post, uploadedUrl, uploadKey.toString());
 
-        return AttachResponse.from(savedAttach);
+        try{
+            Attach savedAttach = attachRepository.saveAndFlush(attach);
+            return AttachResponse.from(savedAttach);
+        } catch (
+                DataIntegrityViolationException exception
+        ){
+            fileService.deleteImage(uploadedUrl);
+
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 처리된 첨부 요청입니다.", exception);
+        }
     }
 
     public List<AttachResponse> getAttaches(Long postId) {

@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
@@ -50,7 +51,7 @@ public class AttachAddServiceTest {
 
         when(postService.findPostById(postId)).thenReturn(post);
         when(fileService.saveImage(file)).thenReturn("/images/test.png");
-        when(attachRepository.save(any(Attach.class)))
+        when(attachRepository.saveAndFlush(any(Attach.class)))
                 .thenAnswer(invocation -> {
                     Attach attach = invocation.getArgument(0);
 
@@ -69,7 +70,7 @@ public class AttachAddServiceTest {
 
         verify(postService).findPostById(postId);
         verify(fileService).saveImage(file);
-        verify(attachRepository).save(any(Attach.class));
+        verify(attachRepository).saveAndFlush(any(Attach.class));
     }
 
 
@@ -133,6 +134,50 @@ public class AttachAddServiceTest {
         assertEquals(100L, response.id());
         verifyNoInteractions(fileService);
         verify(attachRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName(
+            "첨부 등록 conflict - 저장 중 uploadKey가 중복되면 S3 파일을 삭제하고 409를 반환한다"
+    )
+    void addAttach_conflict_duplicateDuringSave() {
+        Long postId = 1L;
+        Long userId = 1L;
+        UUID uploadKey = UUID.randomUUID();
+
+        User writer = createUser(userId);
+
+        Post post = createPost(postId, writer);
+
+        MockMultipartFile file = new MockMultipartFile("file", "poster.png", "image/png", "image-data".getBytes());
+
+        String uploadedUrl = "/images/duplicate.png";
+
+        when(postService.findPostById(postId)).thenReturn(post);
+
+        when(attachRepository.findByPost_IdAndUploadKey(postId, uploadKey.toString())).thenReturn(Optional.empty());
+
+        when(fileService.saveImage(file)).thenReturn(uploadedUrl);
+
+        when(attachRepository.saveAndFlush(any(Attach.class))).thenThrow(
+                new DataIntegrityViolationException("duplicate upload key"));
+
+        ResponseStatusException exception =
+                assertThrows(
+                        ResponseStatusException.class,
+                        () -> attachService.addAttach(
+                                postId,
+                                userId,
+                                uploadKey,
+                                file
+                        )
+                );
+
+        assertEquals(409, exception.getStatusCode().value());
+
+        verify(fileService).deleteImage(uploadedUrl);
+
+        verify(attachRepository).saveAndFlush(any(Attach.class));
     }
 
 
