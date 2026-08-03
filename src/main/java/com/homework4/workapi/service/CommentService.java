@@ -7,6 +7,10 @@ import com.homework4.workapi.entity.Post;
 import com.homework4.workapi.entity.User;
 import com.homework4.workapi.repository.CommentRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +27,7 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final PostService postService;
     private final UserService userService;
+    private static final int COMMENT_PAGE_SIZE = 20;
 
     @Transactional
     public CommentResponse addComment(CommentRequest commentRequest, Long postId, Long userId) {
@@ -35,18 +40,20 @@ public class CommentService {
         return CommentResponse.from(savedComment);
     }
 
-    public List<CommentResponse> getComments(Long postId) {
-        postService.findPostById(postId);
-
-        List<Comment> comments = commentRepository.findByPostIdWithUser(postId);
-        List<CommentResponse> responses = new ArrayList<>();
-
-        for (Comment comment : comments) {
-            responses.add(CommentResponse.from(comment));
+    public Page<CommentResponse> getComments(Long postId, int page) {
+        if(page<1){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "페이지는 1이상 이어야 합니다.");
         }
 
-        return responses;
+        postService.findPostById(postId);
+
+        Pageable pageable = PageRequest.of(page-1, COMMENT_PAGE_SIZE, Sort.by(Sort.Order.desc("createTime"), Sort.Order.desc("id")));
+
+        return commentRepository
+                .findByPost_Id(postId, pageable)
+                .map(CommentResponse::from);
     }
+
     @Transactional
     public void deleteComment(Long postId, Long commentId, Long userId) {
         Comment comment = findCommentById(commentId);

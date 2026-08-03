@@ -14,6 +14,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
@@ -52,24 +55,25 @@ class CommentReadServiceTest {
         Comment comment2 = createComment(101L, commenter, post, "댓글2");
 
         when(postService.findPostById(postId)).thenReturn(post);
-        when(commentRepository.findByPostIdWithUser(postId))
-                .thenReturn(List.of(comment1, comment2));
+        when(commentRepository.findByPost_Id(eq(postId), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(comment1, comment2)));
 
-        List<CommentResponse> responses = commentService.getComments(postId);
+        Page<CommentResponse> responses = commentService.getComments(postId, 1);
 
-        assertEquals(2, responses.size());
+        assertEquals(2, responses.getTotalElements());
 
-        assertEquals(100L, responses.get(0).id());
-        assertEquals(postId, responses.get(0).postId());
-        assertEquals(2L, responses.get(0).userId());
-        assertEquals("kim", responses.get(0).username());
-        assertEquals("댓글1", responses.get(0).content());
+        assertEquals(100L, responses.getContent().get(0).id());
+        assertEquals(postId, responses.getContent().get(0).postId());
+        assertEquals(2L, responses.getContent().get(0).userId());
+        assertEquals("kim", responses.getContent().get(0).username());
+        assertEquals("댓글1", responses.getContent().get(0).content());
 
-        assertEquals(101L, responses.get(1).id());
-        assertEquals("댓글2", responses.get(1).content());
+        assertEquals(101L, responses.getContent().get(1).id());
+        assertEquals("댓글2", responses.getContent().get(1).content());
 
         verify(postService, times(1)).findPostById(postId);
-        verify(commentRepository, times(1)).findByPostIdWithUser(postId);
+        verify(commentRepository, times(1))
+                .findByPost_Id(eq(postId), any(Pageable.class));
     }
 
     @Test
@@ -81,15 +85,17 @@ class CommentReadServiceTest {
         Post post = createPost(postId, writer);
 
         when(postService.findPostById(postId)).thenReturn(post);
-        when(commentRepository.findByPostIdWithUser(postId))
-                .thenReturn(List.of());
+        when(commentRepository.findByPost_Id(eq(postId), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of()));
 
-        List<CommentResponse> responses = commentService.getComments(postId);
+        Page<CommentResponse> responses = commentService.getComments(postId, 1);
 
-        assertEquals(0, responses.size());
+        assertEquals(0, responses.getTotalElements());
+        assertEquals(0, responses.getContent().size());
 
         verify(postService, times(1)).findPostById(postId);
-        verify(commentRepository, times(1)).findByPostIdWithUser(postId);
+        verify(commentRepository, times(1))
+                .findByPost_Id(eq(postId), any(Pageable.class));
     }
 
     @Test
@@ -102,13 +108,26 @@ class CommentReadServiceTest {
 
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
-                () -> commentService.getComments(postId)
+                () -> commentService.getComments(postId, 1)
         );
 
         assertEquals(404, exception.getStatusCode().value());
 
         verify(postService, times(1)).findPostById(postId);
-        verify(commentRepository, never()).findByPostIdWithUser(anyLong());
+        verify(commentRepository, never())
+                .findByPost_Id(anyLong(), any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("댓글 목록 조회 fail - 페이지가 1보다 작으면 실패한다")
+    void getComments_fail_invalidPage() {
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> commentService.getComments(10L, 0)
+        );
+
+        assertEquals(400, exception.getStatusCode().value());
+        verifyNoInteractions(postService, commentRepository);
     }
 
     private User createUser(Long id, String username) {

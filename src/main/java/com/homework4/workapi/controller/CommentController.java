@@ -3,9 +3,11 @@ package com.homework4.workapi.controller;
 import com.homework4.workapi.dto.comment.request.CommentRequest;
 import com.homework4.workapi.dto.comment.response.CommentResponse;
 import com.homework4.workapi.dto.common.CommonResponse;
+import com.homework4.workapi.dto.common.PageResponse;
 import com.homework4.workapi.service.CommentService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,9 +34,10 @@ public class CommentController {
     }
 
     @GetMapping
-    public CommonResponse<List<CommentResponse>> getComments(@PathVariable Long postId) {
-        List<CommentResponse> comments = commentService.getComments(postId);
-        return new CommonResponse<>(null, comments);
+    public CommonResponse<PageResponse<CommentResponse>> getComments(@PathVariable Long postId, @RequestParam(defaultValue = "1") int page) {
+        PageResponse<CommentResponse> comments = PageResponse.from(commentService.getComments(postId, page));
+
+        return new CommonResponse<>("댓글 목록을 조회하였습니다.", comments);
     }
 
     @PutMapping("/{commentId}")
