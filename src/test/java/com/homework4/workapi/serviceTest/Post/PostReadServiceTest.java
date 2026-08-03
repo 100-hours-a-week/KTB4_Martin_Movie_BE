@@ -1,5 +1,6 @@
 package com.homework4.workapi.serviceTest.Post;
 
+import com.homework4.workapi.dto.post.response.PostListResponse;
 import com.homework4.workapi.dto.post.response.PostResponse;
 import com.homework4.workapi.entity.Post;
 import com.homework4.workapi.entity.PostLike;
@@ -16,6 +17,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -36,7 +40,7 @@ class PostReadServiceTest {
     @InjectMocks PostService postService;
 
     @Test
-    @DisplayName("게시글 목록 조회 success - 여러 게시글 List 조회")
+    @DisplayName("게시글 목록 조회 success - 여러 게시글 Page 조회")
     void getPosts_success() {
         User user = user(1L, "kim");
         Post post1 = post(10L, user, "제목1", "내용1", 7);
@@ -46,8 +50,8 @@ class PostReadServiceTest {
         when(countResult.getPostId()).thenReturn(10L);
         when(countResult.getCommentCount()).thenReturn(2L);
 
-        when(postRepository.findAllWithUserAndAttaches())
-                .thenReturn(List.of(post1, post2));
+        when(postRepository.findAllWithUser(any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(post1, post2)));
         when(commentRepository.countByPostIds(
                 List.of(10L, 20L)
         )).thenReturn(List.of(countResult));
@@ -58,16 +62,16 @@ class PostReadServiceTest {
                 List.of(10L, 20L)
         )).thenReturn(List.of(10L));
 
-        List<PostResponse> responses =
-                postService.getPosts(userId);
+        Page<PostListResponse> responses =
+                postService.getPosts(userId, 1);
 
-        assertEquals(2, responses.size());
-        assertEquals(2, responses.get(0).commentCount());
-        assertEquals(0, responses.get(1).commentCount());
-        assertTrue(responses.get(0).liked());
-        assertFalse(responses.get(1).liked());
+        assertEquals(2, responses.getTotalElements());
+        assertEquals(2, responses.getContent().get(0).commentCount());
+        assertEquals(0, responses.getContent().get(1).commentCount());
+        assertTrue(responses.getContent().get(0).liked());
+        assertFalse(responses.getContent().get(1).liked());
 
-        verify(postRepository).findAllWithUserAndAttaches();
+        verify(postRepository).findAllWithUser(any(Pageable.class));
         verify(commentRepository).countByPostIds(List.of(10L, 20L));
         verify(commentRepository, never()).countByPost_Id(anyLong());
     }

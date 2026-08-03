@@ -9,6 +9,7 @@ public record PageResponse<T>(
         int page,
         int size,
         int totalPages,
+        Long totalElements,
         boolean first,
         boolean last
 ) {
@@ -22,6 +23,7 @@ public record PageResponse<T>(
                 pageData.getNumber() + 1,
                 pageData.getSize(),
                 pageData.getTotalPages(),
+                pageData.getTotalElements(),
                 pageData.isFirst(),
                 pageData.isLast()
         );

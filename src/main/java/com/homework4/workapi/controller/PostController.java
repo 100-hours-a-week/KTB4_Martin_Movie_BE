@@ -1,8 +1,10 @@
 package com.homework4.workapi.controller;
 
 import com.homework4.workapi.dto.common.CommonResponse;
+import com.homework4.workapi.dto.common.PageResponse;
 import com.homework4.workapi.dto.post.request.PostRequest;
 import com.homework4.workapi.dto.post.response.PostLikeResponse;
+import com.homework4.workapi.dto.post.response.PostListResponse;
 import com.homework4.workapi.dto.post.response.PostResponse;
 import com.homework4.workapi.dto.post.request.UpdatePostRequest;
 import com.homework4.workapi.dto.post.response.PostsPreviewResponse;
@@ -30,10 +32,11 @@ public class PostController {
     }
 
     @GetMapping
-    public CommonResponse<List<PostResponse>> getPosts(
-            @AuthenticationPrincipal Long userId
+    public CommonResponse<PageResponse<PostListResponse>> getPosts(
+            @AuthenticationPrincipal Long userId,
+            @RequestParam(defaultValue = "1") int page
     ) {
-        List<PostResponse> posts = postService.getPosts(userId);
+        PageResponse<PostListResponse> posts = PageResponse.from(postService.getPosts(userId, page));
 
         return new CommonResponse<>(
                 "게시글 목록을 조회 하였습니다.",

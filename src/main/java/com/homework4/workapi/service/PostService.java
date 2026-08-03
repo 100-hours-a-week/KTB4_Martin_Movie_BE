@@ -2,6 +2,7 @@ package com.homework4.workapi.service;
 
 import com.homework4.workapi.dto.post.request.PostRequest;
 import com.homework4.workapi.dto.post.response.PostLikeResponse;
+import com.homework4.workapi.dto.post.response.PostListResponse;
 import com.homework4.workapi.dto.post.response.PostResponse;
 import com.homework4.workapi.dto.post.request.UpdatePostRequest;
 import com.homework4.workapi.dto.post.response.PostsPreviewResponse;
@@ -15,6 +16,10 @@ import com.homework4.workapi.repository.PostLikeRepository;
 import com.homework4.workapi.repository.PostRepository;
 import com.homework4.workapi.repository.PostViewRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +39,7 @@ public class PostService {
     private final CommentRepository commentRepository;
     private final FileService fileService;
     private final PostViewRepository postViewRepository;
+    private static final int POST_PAGE_SIZE = 10;
 
     @Transactional
     public PostResponse addPost(Long userId, PostRequest postRequest) {
@@ -82,20 +88,21 @@ public class PostService {
     }
 
     @Transactional
-    public List<PostResponse> getPosts(Long userId) {
-        List<Post> posts =
-                postRepository.findAllWithUserAndAttaches();
-
-        if (posts.isEmpty()) {
-            return List.of();
+    public Page<PostListResponse> getPosts(Long userId, int page) {
+        if(page<1){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "페이지는 1이상 이어야 합니다.");
         }
 
-        List<Long> postIds = posts.stream()
+        Pageable pagable = PageRequest.of(page-1, POST_PAGE_SIZE, Sort.by(Sort.Order.desc("createTime"), Sort.Order.desc("id")));
+        Page<Post> postPage = postRepository.findAllWithUser(pagable);
+
+        List<Long> postIds = postPage.getContent().stream()
                 .map(Post::getId)
                 .toList();
 
-        Map<Long, Integer> commentCountMap =
-                commentRepository.countByPostIds(postIds)
+        Map<Long, Integer> commentCountMap = postIds.isEmpty()
+                ? Map.of()
+                : commentRepository.countByPostIds(postIds)
                         .stream()
                         .collect(Collectors.toMap(
                                 CommentCountProjection::getPostId,
@@ -104,31 +111,17 @@ public class PostService {
                                 )
                         ));
 
-        Set<Long> likedPostIds = new HashSet<>(
-                postLikeRepository.findLikedPostIds(
-                        userId,
-                        postIds
-                )
-        );
+        Set<Long> likedPostIds = postIds.isEmpty()
+                ? Set.of()
+                : new HashSet<>(postLikeRepository.findLikedPostIds(userId, postIds));
 
-        return posts.stream()
-                .map(post -> {
-                    int commentCount =
-                            commentCountMap.getOrDefault(
-                                    post.getId(),
-                                    0
-                            );
-
-                    boolean liked =
-                            likedPostIds.contains(post.getId());
-
-                    return PostResponse.from(
+        return postPage.map(post ->
+                    PostListResponse.from(
                             post,
-                            commentCount,
-                            liked
-                    );
-                })
-                .toList();
+                            commentCountMap.getOrDefault(post.getId(), 0),
+                            likedPostIds.contains(post.getId())
+                    )
+                );
     }
 
     @Transactional
