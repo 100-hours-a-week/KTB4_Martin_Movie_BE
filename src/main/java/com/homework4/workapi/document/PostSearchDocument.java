@@ -30,7 +30,7 @@ public class PostSearchDocument {
     @Field(type = FieldType.Text, analyzer = "posts_nori", searchAnalyzer = "posts_nori")
     private String content;
 
-    @Field(type = FieldType.Date, format = DateFormat.date_hour_minute_second_millis)
+    @Field(type = FieldType.Date, format = {}, pattern = "uuuu-MM-dd'T'HH:mm:ss.SSSSSS")
     private LocalDateTime createTime;
 
     public static PostSearchDocument from(Post post) {
