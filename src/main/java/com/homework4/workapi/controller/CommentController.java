@@ -6,7 +6,7 @@ import com.homework4.workapi.dto.common.CommonResponse;
 import com.homework4.workapi.dto.common.PageResponse;
 import com.homework4.workapi.service.CommentService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -15,9 +15,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/posts/{postId}/comments")
+@RequiredArgsConstructor
 public class CommentController {
-    @Autowired
-    private CommentService commentService;
+
+    private final CommentService commentService;
 
     @PostMapping
     public CommonResponse<CommentResponse> addComment(

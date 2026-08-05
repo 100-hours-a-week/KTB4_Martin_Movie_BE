@@ -1,6 +1,7 @@
 package com.homework4.workapi.repository;
 
 import com.homework4.workapi.entity.Post;
+import jakarta.persistence.Entity;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,4 +22,13 @@ public interface PostRepository extends JpaRepository<Post,Long> {
 
     @EntityGraph(attributePaths = {"user"})
     List<Post> findTop5ByOrderByCreateTimeDesc();
+
+    @EntityGraph(attributePaths = {"user", "attaches"})
+    @Query("""
+        select distinct p
+        from Post p
+        where p.id in :postIds
+        """)
+    List<Post> findAllByIdsWithDetails(@Param("postIds") List<Long> post);
+
 }

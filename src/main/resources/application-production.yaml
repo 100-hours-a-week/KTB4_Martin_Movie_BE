@@ -10,6 +10,7 @@ spring:
       ddl-auto: update
     show-sql: false
 
-movie:
-  import:
-    enabled: ${MOVIE_IMPORT_ENABLED:false}
+aws:
+  s3:
+    bucket: ${AWS_S3_BUCKET}
+    region: ${AWS_REGION:ap-southeast-2}

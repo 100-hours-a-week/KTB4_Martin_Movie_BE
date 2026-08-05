@@ -87,14 +87,22 @@ public class PostService {
                 .toList();
     }
 
+
+
+
+
     @Transactional
     public Page<PostListResponse> getPosts(Long userId, int page) {
-        if(page<1){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "페이지는 1이상 이어야 합니다.");
+        if (page < 1) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "페이지는 1 이상이어야 합니다."
+            );
         }
 
-        Pageable pagable = PageRequest.of(page-1, POST_PAGE_SIZE, Sort.by(Sort.Order.desc("createTime"), Sort.Order.desc("id")));
-        Page<Post> postPage = postRepository.findAllWithUser(pagable);
+        Pageable pageable = PageRequest.of(page - 1, POST_PAGE_SIZE, Sort.by(Sort.Order.desc("createTime"), Sort.Order.desc("id")));
+
+        Page<Post> postPage = postRepository.findAllWithUser(pageable);
 
         List<Long> postIds = postPage.getContent().stream()
                 .map(Post::getId)
@@ -103,26 +111,32 @@ public class PostService {
         Map<Long, Integer> commentCountMap = postIds.isEmpty()
                 ? Map.of()
                 : commentRepository.countByPostIds(postIds)
-                        .stream()
-                        .collect(Collectors.toMap(
-                                CommentCountProjection::getPostId,
-                                result -> Math.toIntExact(
-                                        result.getCommentCount()
-                                )
-                        ));
+                .stream()
+                .collect(Collectors.toMap(
+                        CommentCountProjection::getPostId,
+                        result -> Math.toIntExact(
+                                result.getCommentCount()
+                        )
+                ));
 
         Set<Long> likedPostIds = postIds.isEmpty()
                 ? Set.of()
-                : new HashSet<>(postLikeRepository.findLikedPostIds(userId, postIds));
+                : new HashSet<>(
+                postLikeRepository.findLikedPostIds(
+                        userId,
+                        postIds
+                )
+        );
 
         return postPage.map(post ->
-                    PostListResponse.from(
-                            post,
-                            commentCountMap.getOrDefault(post.getId(), 0),
-                            likedPostIds.contains(post.getId())
-                    )
-                );
+                PostListResponse.from(
+                        post,
+                        commentCountMap.getOrDefault(post.getId(), 0),
+                        likedPostIds.contains(post.getId())
+                )
+        );
     }
+
 
     @Transactional
     public PostResponse getPost(Long postId, Long userId) {

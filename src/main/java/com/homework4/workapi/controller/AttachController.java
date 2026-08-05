@@ -3,7 +3,7 @@ package com.homework4.workapi.controller;
 import com.homework4.workapi.dto.attach.response.AttachResponse;
 import com.homework4.workapi.dto.common.CommonResponse;
 import com.homework4.workapi.service.AttachService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -13,10 +13,10 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
+@RequiredArgsConstructor
 public class AttachController {
 
-    @Autowired
-    private AttachService attachService;
+    private final AttachService attachService;
 
     @PostMapping(
             value = "/posts/{postId}/attachments",

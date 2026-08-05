@@ -1,6 +1,33 @@
 name: martin-movie
 
 services:
+  elasticsearch:
+    build:
+      context: ./elasticsearch
+      dockerfile: Dockerfile
+    container_name: martin-elasticsearch
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+      TZ: Asia/Seoul
+    ports:
+      - "127.0.0.1:9200:9200"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -fsS http://127.0.0.1:9200 >/dev/null || exit 1"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+    mem_limit: 768m
+    restart: unless-stopped
+
   backend:
     build:
       context: .
@@ -25,6 +52,9 @@ services:
       retries: 12
       start_period: 45s
     restart: unless-stopped
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
 
   frontend:
     build:
@@ -66,3 +96,6 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+
+volumes:
+  elasticsearch-data:

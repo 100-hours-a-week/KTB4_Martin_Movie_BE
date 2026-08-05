@@ -8,9 +8,10 @@ import com.homework4.workapi.dto.post.response.PostListResponse;
 import com.homework4.workapi.dto.post.response.PostResponse;
 import com.homework4.workapi.dto.post.request.UpdatePostRequest;
 import com.homework4.workapi.dto.post.response.PostsPreviewResponse;
+import com.homework4.workapi.service.PostSearchService;
 import com.homework4.workapi.service.PostService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,9 +19,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/posts")
+@RequiredArgsConstructor
 public class PostController {
-    @Autowired
-    private PostService postService;
+
+    private final PostService postService;
+    private final PostSearchService postSearchService;
 
     @PostMapping
     public CommonResponse<PostResponse> addPost(@AuthenticationPrincipal Long userId, @Valid @RequestBody PostRequest postRequest) {
@@ -90,5 +93,13 @@ public class PostController {
         long viewCount = postService.updatePostView(postId, userId);
 
         return new CommonResponse<>("조회수가 반영되었습니다.", viewCount);
+    }
+
+    @GetMapping("/search")
+    public CommonResponse<PageResponse<PostListResponse>> searchPosts(@AuthenticationPrincipal Long userId, @RequestParam String keyword, @RequestParam(defaultValue = "1") int page) {
+        PageResponse<PostListResponse> posts =
+                PageResponse.from(postSearchService.searchPosts(userId, page, keyword));
+
+        return new CommonResponse<>("게시글 검색 결과를 조회하였습니다.", posts);
     }
 }

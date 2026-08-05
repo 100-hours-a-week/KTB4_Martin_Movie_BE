@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.core.type.TypeReference;
@@ -21,11 +21,9 @@ import java.util.List;
 
 @Slf4j
 @Component
+@Profile("movie-import")
 @RequiredArgsConstructor
-@ConditionalOnProperty(
-        name = "movie.import.enabled",
-        havingValue = "true"
-)
+
 public class MovieDataLoader implements ApplicationRunner {
 
     private static final int BATCH_SIZE = 100;
@@ -44,37 +42,21 @@ public class MovieDataLoader implements ApplicationRunner {
             return;
         }
 
-        String dataPath = System.getenv(
-                "MOVIE_DATA_PATH"
-        );
+        String dataPath = System.getenv("MOVIE_DATA_PATH");
 
-        if (
-                dataPath == null
-                        || dataPath.isBlank()
-        ) {
-            throw new IllegalStateException(
-                    "MOVIE_DATA_PATH 환경변수가 없습니다."
-            );
+        if (dataPath == null || dataPath.isBlank()) {
+            throw new IllegalStateException("MOVIE_DATA_PATH 환경변수가 없습니다.");
         }
 
         Path path = Path.of(dataPath);
 
         if (!Files.isRegularFile(path)) {
-            throw new IllegalStateException(
-                    "영화 데이터 파일을 찾을 수 없습니다: "
-                            + path
-            );
+            throw new IllegalStateException("영화 데이터 파일을 찾을 수 없습니다: " + path);
         }
 
-        List<MovieData> movieData =
-                objectMapper.readValue(
-                        path,
-                        new TypeReference<>() {
-                        }
-                );
+        List<MovieData> movieData = objectMapper.readValue(path, new TypeReference<>() {});
 
-        for (
-                int start = 0;
+        for (int start = 0;
                 start < movieData.size();
                 start += BATCH_SIZE
         ) {

@@ -25,6 +25,7 @@ dependencies {
 	implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
 	implementation platform('software.amazon.awssdk:bom:2.46.8')
 	implementation 'software.amazon.awssdk:s3'
+	implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
 
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
