@@ -97,15 +97,33 @@ public class PostSearchService {
 
         NativeQuery query = NativeQuery.builder()
                 .withQuery(queryBuilder ->
-                        queryBuilder.multiMatch(multiMatch ->
-                                multiMatch
-                                        .query(keyword.trim())
-                                        .fields(
-                                                "title^2",
-                                                "content"
+                        queryBuilder.bool(boolQuery ->
+                                boolQuery
+                                        .should(shouldQuery ->
+                                                shouldQuery.multiMatch(multiMatch ->
+                                                        multiMatch
+                                                                .query(keyword.trim())
+                                                                .fields(
+                                                                        "title^2",
+                                                                        "content"
+                                                                )
+                                                                .type(TextQueryType.CrossFields)
+                                                                .operator(Operator.And)
+                                                                .boost(3.0f)
+                                                )
                                         )
-                                        .type(TextQueryType.CrossFields)
-                                        .operator(Operator.And)
+                                        .should(shouldQuery ->
+                                                shouldQuery.match(match ->
+                                                        match
+                                                                .field("title")
+                                                                .query(keyword.trim())
+                                                                .operator(Operator.And)
+                                                                .fuzziness("AUTO")
+                                                                .maxExpansions(20)
+                                                                .boost(1.0f)
+                                                )
+                                        )
+                                        .minimumShouldMatch("1")
                         )
                 )
                 .withPageable(pageable)
