@@ -4,6 +4,7 @@ import com.homework4.workapi.dto.post.response.PostResponse;
 import com.homework4.workapi.entity.Attach;
 import com.homework4.workapi.entity.Post;
 import com.homework4.workapi.entity.User;
+import com.homework4.workapi.event.PostSearchSyncEvent;
 import com.homework4.workapi.repository.CommentRepository;
 import com.homework4.workapi.repository.PostLikeRepository;
 import com.homework4.workapi.repository.PostRepository;
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -43,6 +45,9 @@ class PostDeleteServiceTest {
 
     @Mock
     CommentRepository commentRepository;
+
+    @Mock
+    ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     PostService postService;
@@ -74,6 +79,9 @@ class PostDeleteServiceTest {
         verify(fileService).deleteImage("/images/first.png");
         verify(fileService).deleteImage("/images/second.jpg");
         verify(postRepository, times(1)).delete(post);
+        verify(eventPublisher).publishEvent(
+                PostSearchSyncEvent.delete(postId)
+        );
     }
 
     @Test

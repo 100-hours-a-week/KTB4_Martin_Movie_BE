@@ -4,6 +4,7 @@ import com.homework4.workapi.dto.post.request.PostRequest;
 import com.homework4.workapi.dto.post.response.PostResponse;
 import com.homework4.workapi.entity.Post;
 import com.homework4.workapi.entity.User;
+import com.homework4.workapi.event.PostSearchSyncEvent;
 import com.homework4.workapi.repository.CommentRepository;
 import com.homework4.workapi.repository.PostLikeRepository;
 import com.homework4.workapi.repository.PostRepository;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -28,6 +30,9 @@ public class PostAddServiceTest {
 
     @Mock
     UserService userService;
+
+    @Mock
+    ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     PostService postService;
@@ -57,5 +62,6 @@ public class PostAddServiceTest {
         verify(postRepository).save(argThat(post ->
                 post.getRating() == 8
         ));
+        verify(eventPublisher).publishEvent(any(PostSearchSyncEvent.class));
     }
 }

@@ -4,6 +4,7 @@ import com.homework4.workapi.dto.post.response.PostResponse;
 import com.homework4.workapi.dto.post.request.UpdatePostRequest;
 import com.homework4.workapi.entity.Post;
 import com.homework4.workapi.entity.User;
+import com.homework4.workapi.event.PostSearchSyncEvent;
 import com.homework4.workapi.repository.CommentRepository;
 import com.homework4.workapi.repository.PostLikeRepository;
 import com.homework4.workapi.repository.PostRepository;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -32,6 +34,9 @@ class PostUpdateServiceTest {
 
     @Mock
     CommentRepository commentRepository;
+
+    @Mock
+    ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     PostService postService;
@@ -57,6 +62,9 @@ class PostUpdateServiceTest {
         assertEquals(9, post.getRating());
         assertEquals(9, response.rating());
         assertEquals(2, response.commentCount());
+        verify(eventPublisher).publishEvent(
+                PostSearchSyncEvent.upsert(postId)
+        );
     }
     @Test
     @DisplayName("게시글 수정 fail - 게시글이 존재하지 않으면 수정에 실패한다")
