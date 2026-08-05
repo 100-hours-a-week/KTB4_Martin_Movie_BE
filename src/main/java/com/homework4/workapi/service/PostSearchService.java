@@ -6,11 +6,17 @@ import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
 import com.homework4.workapi.document.PostSearchDocument;
 import com.homework4.workapi.dto.post.response.PostListResponse;
 import com.homework4.workapi.entity.Post;
+import com.homework4.workapi.event.PostSearchSyncEvent;
 import com.homework4.workapi.projection.CommentCountProjection;
 import com.homework4.workapi.repository.CommentRepository;
 import com.homework4.workapi.repository.PostLikeRepository;
 import com.homework4.workapi.repository.PostRepository;
+import com.homework4.workapi.repository.PostSearchRepository;
+import static com.homework4.workapi.common.PaginationConstants.POST_PAGE_SIZE;
+import static com.homework4.workapi.validation.ValidationConstants.MIN_PAGE;
+import static com.homework4.workapi.validation.ValidationConstants.PAGE_MIN_MESSAGE;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -21,27 +27,25 @@ import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class PostSearchService {
 
-    private static final int POST_PAGE_SIZE = 10;
-
     private final ElasticsearchOperations elasticsearchOperations;
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
     private final PostLikeRepository postLikeRepository;
+    private final PostSearchRepository postSearchRepository;
 
     public Page<PostListResponse> searchPosts(
             Long userId,
@@ -73,20 +77,14 @@ public class PostSearchService {
     }
 
     private void validatePage(int page) {
-        if (page < 1) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "페이지는 1 이상이어야 합니다."
-            );
+        if (page < MIN_PAGE) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, PAGE_MIN_MESSAGE);
         }
     }
 
     private void validateKeyword(String keyword) {
         if (keyword == null || keyword.isBlank()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "검색어를 입력해야 합니다."
-            );
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "검색어를 입력해야 합니다.");
         }
     }
 
@@ -94,10 +92,7 @@ public class PostSearchService {
             String keyword,
             int page
     ) {
-        Pageable pageable = PageRequest.of(
-                page - 1,
-                POST_PAGE_SIZE
-        );
+        Pageable pageable = PageRequest.of(page - MIN_PAGE, POST_PAGE_SIZE);
 
         NativeQuery query = NativeQuery.builder()
                 .withQuery(queryBuilder ->
@@ -237,5 +232,29 @@ public class PostSearchService {
                         postIds
                 )
         );
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(readOnly = true)
+    public void syncPostSearchIndex(PostSearchSyncEvent event) {
+        try {
+            if (event.type() == PostSearchSyncEvent.Type.DELETE) {
+                postSearchRepository.deleteById(event.postId());
+                return;
+            }
+
+            postRepository.findById(event.postId())
+                    .ifPresent(post ->
+                            postSearchRepository.save(
+                                    PostSearchDocument.from(post)
+                            )
+                    );
+        } catch (Exception exception) {
+            log.error(
+                    "게시글 검색 색인 동기화에 실패했습니다. postId={}",
+                    event.postId(),
+                    exception
+            );
+        }
     }
 }

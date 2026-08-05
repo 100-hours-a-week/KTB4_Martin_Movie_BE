@@ -6,11 +6,15 @@ import com.homework4.workapi.dto.movie.response.MoviePreviewResponse;
 import com.homework4.workapi.dto.movie.response.MovieResponse;
 import com.homework4.workapi.dto.movie.response.MoviesResponse;
 import com.homework4.workapi.service.MovieService;
+import com.homework4.workapi.validation.ValidationConstants;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Validated
 @RestController
 @RequestMapping("/movies")
 @RequiredArgsConstructor
@@ -20,7 +24,9 @@ public class MovieController {
 
     @GetMapping
     public CommonResponse<PageResponse<MoviesResponse>> getMovies(
-            @RequestParam(defaultValue = "1") int page
+            @RequestParam(defaultValue = "1")
+            @Min(value = ValidationConstants.MIN_PAGE, message = ValidationConstants.PAGE_MIN_MESSAGE)
+            int page
     ) {
         PageResponse<MoviesResponse> movies = PageResponse.from(
                 movieService.getMovies(page)

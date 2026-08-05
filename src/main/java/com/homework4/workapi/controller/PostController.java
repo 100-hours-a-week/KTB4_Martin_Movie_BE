@@ -10,13 +10,18 @@ import com.homework4.workapi.dto.post.request.UpdatePostRequest;
 import com.homework4.workapi.dto.post.response.PostsPreviewResponse;
 import com.homework4.workapi.service.PostSearchService;
 import com.homework4.workapi.service.PostService;
+import com.homework4.workapi.validation.ValidationConstants;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Validated
 @RestController
 @RequestMapping("/posts")
 @RequiredArgsConstructor
@@ -37,7 +42,8 @@ public class PostController {
     @GetMapping
     public CommonResponse<PageResponse<PostListResponse>> getPosts(
             @AuthenticationPrincipal Long userId,
-            @RequestParam(defaultValue = "1") int page
+            @RequestParam(defaultValue = "1")
+            @Min( value = ValidationConstants.MIN_PAGE, message = ValidationConstants.PAGE_MIN_MESSAGE ) int page
     ) {
         PageResponse<PostListResponse> posts = PageResponse.from(postService.getPosts(userId, page));
 
@@ -96,7 +102,15 @@ public class PostController {
     }
 
     @GetMapping("/search")
-    public CommonResponse<PageResponse<PostListResponse>> searchPosts(@AuthenticationPrincipal Long userId, @RequestParam String keyword, @RequestParam(defaultValue = "1") int page) {
+    public CommonResponse<PageResponse<PostListResponse>> searchPosts(
+            @AuthenticationPrincipal Long userId,
+            @RequestParam
+            @Size(max = ValidationConstants.SEARCH_KEYWORD_MAX_LENGTH, message = ValidationConstants.KEYWORD_MAX_MESSAGE)
+            String keyword,
+            @RequestParam(defaultValue = "1")
+            @Min( value = ValidationConstants.MIN_PAGE, message = ValidationConstants.PAGE_MIN_MESSAGE )
+            int page
+    ) {
         PageResponse<PostListResponse> posts =
                 PageResponse.from(postSearchService.searchPosts(userId, page, keyword));
 

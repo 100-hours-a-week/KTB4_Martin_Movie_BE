@@ -15,9 +15,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import static com.homework4.workapi.common.PaginationConstants.COMMENT_PAGE_SIZE;
+import static com.homework4.workapi.validation.ValidationConstants.MIN_PAGE;
+import static com.homework4.workapi.validation.ValidationConstants.PAGE_MIN_MESSAGE;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+
 import java.util.Optional;
 
 @Service
@@ -27,7 +30,6 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final PostService postService;
     private final UserService userService;
-    private static final int COMMENT_PAGE_SIZE = 20;
 
     @Transactional
     public CommentResponse addComment(CommentRequest commentRequest, Long postId, Long userId) {
@@ -41,13 +43,13 @@ public class CommentService {
     }
 
     public Page<CommentResponse> getComments(Long postId, int page) {
-        if(page<1){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "페이지는 1이상 이어야 합니다.");
+        if(page<MIN_PAGE){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, PAGE_MIN_MESSAGE);
         }
 
         postService.findPostById(postId);
 
-        Pageable pageable = PageRequest.of(page-1, COMMENT_PAGE_SIZE, Sort.by(Sort.Order.desc("createTime"), Sort.Order.desc("id")));
+        Pageable pageable = PageRequest.of(page-MIN_PAGE, COMMENT_PAGE_SIZE, Sort.by(Sort.Order.desc("createTime"), Sort.Order.desc("id")));
 
         return commentRepository
                 .findByPost_Id(postId, pageable)

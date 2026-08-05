@@ -1,5 +1,7 @@
 package com.homework4.workapi.service;
 
+import com.homework4.workapi.event.PostSearchSyncEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import com.homework4.workapi.dto.post.request.PostRequest;
 import com.homework4.workapi.dto.post.response.PostLikeResponse;
 import com.homework4.workapi.dto.post.response.PostListResponse;
@@ -24,6 +26,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import static com.homework4.workapi.common.PaginationConstants.POST_PAGE_SIZE;
+import static com.homework4.workapi.validation.ValidationConstants.MIN_PAGE;
+import static com.homework4.workapi.validation.ValidationConstants.PAGE_MIN_MESSAGE;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -39,20 +44,21 @@ public class PostService {
     private final CommentRepository commentRepository;
     private final FileService fileService;
     private final PostViewRepository postViewRepository;
-    private static final int POST_PAGE_SIZE = 10;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public PostResponse addPost(Long userId, PostRequest postRequest) {
         User user = userService.findUserById(userId);
         Post post = new Post(user, postRequest.title(), postRequest.content(), postRequest.rating());
         Post savedPost = postRepository.save(post);
+        eventPublisher.publishEvent(PostSearchSyncEvent.upsert(savedPost.getId()));
+
         return PostResponse.from(savedPost, 0, false);
     }
 
     @Transactional
     public List<PostsPreviewResponse> getPostsPreview(){
-        List<Post> posts =
-                postRepository.findTop5ByOrderByCreateTimeDesc();
+        List<Post> posts = postRepository.findTop5ByOrderByCreateTimeDesc();
 
         if (posts.isEmpty()) {
             return List.of();
@@ -79,28 +85,20 @@ public class PostService {
                                     0
                             );
 
-                    return PostsPreviewResponse.from(
-                            post,
-                            commentCount
-                    );
-                })
-                .toList();
+                    return PostsPreviewResponse.from(post, commentCount);
+                }).toList();
     }
-
-
-
-
 
     @Transactional
     public Page<PostListResponse> getPosts(Long userId, int page) {
-        if (page < 1) {
+        if (page < MIN_PAGE) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "페이지는 1 이상이어야 합니다."
+                    PAGE_MIN_MESSAGE
             );
         }
 
-        Pageable pageable = PageRequest.of(page - 1, POST_PAGE_SIZE, Sort.by(Sort.Order.desc("createTime"), Sort.Order.desc("id")));
+        Pageable pageable = PageRequest.of(page - MIN_PAGE, POST_PAGE_SIZE, Sort.by(Sort.Order.desc("createTime"), Sort.Order.desc("id")));
 
         Page<Post> postPage = postRepository.findAllWithUser(pageable);
 
@@ -122,18 +120,11 @@ public class PostService {
         Set<Long> likedPostIds = postIds.isEmpty()
                 ? Set.of()
                 : new HashSet<>(
-                postLikeRepository.findLikedPostIds(
-                        userId,
-                        postIds
-                )
+                postLikeRepository.findLikedPostIds(userId, postIds)
         );
 
         return postPage.map(post ->
-                PostListResponse.from(
-                        post,
-                        commentCountMap.getOrDefault(post.getId(), 0),
-                        likedPostIds.contains(post.getId())
-                )
+                PostListResponse.from(post, commentCountMap.getOrDefault(post.getId(), 0), likedPostIds.contains(post.getId()))
         );
     }
 
@@ -163,6 +154,8 @@ public class PostService {
         });
 
         postRepository.delete(post);
+        eventPublisher.publishEvent(PostSearchSyncEvent.delete(post.getId()));
+
 
         return PostResponse.from(post, 0, false);
     }
@@ -174,6 +167,8 @@ public class PostService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "게시글 작성자만 수정 가능합니다.");
         }
         post.update(postRequest.title(), postRequest.content(), postRequest.rating());
+        eventPublisher.publishEvent(PostSearchSyncEvent.upsert(post.getId()));
+
         int commentCount = commentRepository.countByPost_Id(postId);
         return PostResponse.from(post, commentCount, false);
     }

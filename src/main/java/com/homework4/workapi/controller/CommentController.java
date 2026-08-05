@@ -5,14 +5,15 @@ import com.homework4.workapi.dto.comment.response.CommentResponse;
 import com.homework4.workapi.dto.common.CommonResponse;
 import com.homework4.workapi.dto.common.PageResponse;
 import com.homework4.workapi.service.CommentService;
+import com.homework4.workapi.validation.ValidationConstants;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
+@Validated
 @RestController
 @RequestMapping("/posts/{postId}/comments")
 @RequiredArgsConstructor
@@ -35,7 +36,12 @@ public class CommentController {
     }
 
     @GetMapping
-    public CommonResponse<PageResponse<CommentResponse>> getComments(@PathVariable Long postId, @RequestParam(defaultValue = "1") int page) {
+    public CommonResponse<PageResponse<CommentResponse>> getComments(
+            @PathVariable Long postId,
+            @RequestParam(defaultValue = "1")
+            @Min( value = ValidationConstants.MIN_PAGE, message = ValidationConstants.PAGE_MIN_MESSAGE)
+            int page
+    ){
         PageResponse<CommentResponse> comments = PageResponse.from(commentService.getComments(postId, page));
 
         return new CommonResponse<>("댓글 목록을 조회하였습니다.", comments);

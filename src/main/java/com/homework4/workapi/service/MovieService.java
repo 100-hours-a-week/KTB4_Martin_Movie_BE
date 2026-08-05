@@ -15,6 +15,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import static com.homework4.workapi.common.PaginationConstants.MOVIE_PAGE_SIZE;
+import static com.homework4.workapi.validation.ValidationConstants.MIN_PAGE;
+import static com.homework4.workapi.validation.ValidationConstants.PAGE_MIN_MESSAGE;
 
 import java.util.List;
 
@@ -23,16 +26,15 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class MovieService {
 
-    private static final int PAGE_SIZE = 9;
 
     private final MovieRepository movieRepository;
 
     public Page<MoviesResponse> getMovies(int page) {
-        if (page < 1) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "페이지는 1 이상이어야 합니다.");
+        if (page < MIN_PAGE) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, PAGE_MIN_MESSAGE);
         }
 
-        Pageable pageable = PageRequest.of(page - 1, PAGE_SIZE,
+        Pageable pageable = PageRequest.of(page - MIN_PAGE, MOVIE_PAGE_SIZE,
                 Sort.by(Sort.Order.asc("ranking"), Sort.Order.asc("id"))
         );
         return movieRepository.findAll(pageable).map(MoviesResponse::from);
