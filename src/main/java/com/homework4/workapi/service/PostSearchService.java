@@ -26,6 +26,7 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -235,7 +236,10 @@ public class PostSearchService {
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(readOnly = true)
+    @Transactional(
+            propagation = Propagation.REQUIRES_NEW,
+            readOnly = true
+    )
     public void syncPostSearchIndex(PostSearchSyncEvent event) {
         try {
             if (event.type() == PostSearchSyncEvent.Type.DELETE) {
