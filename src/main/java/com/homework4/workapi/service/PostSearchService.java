@@ -8,8 +8,7 @@ import com.homework4.workapi.dto.post.response.PostListResponse;
 import com.homework4.workapi.entity.Post;
 import com.homework4.workapi.event.PostSearchSyncEvent;
 import com.homework4.workapi.projection.CommentCountProjection;
-import com.homework4.workapi.repository.CommentRepository;
-import com.homework4.workapi.repository.PostLikeRepository;
+import com.homework4.workapi.projection.PostListProjection;
 import com.homework4.workapi.repository.PostRepository;
 import com.homework4.workapi.repository.PostSearchRepository;
 import static com.homework4.workapi.common.PaginationConstants.POST_PAGE_SIZE;
@@ -44,8 +43,7 @@ public class PostSearchService {
 
     private final ElasticsearchOperations elasticsearchOperations;
     private final PostRepository postRepository;
-    private final CommentRepository commentRepository;
-    private final PostLikeRepository postLikeRepository;
+    private final PostService postService;
     private final PostSearchRepository postSearchRepository;
 
     public Page<PostListResponse> searchPosts(
@@ -61,19 +59,21 @@ public class PostSearchService {
                 page
         );
 
-        List<Post> orderedPosts = findPostsInSearchOrder(
-                searchPage.getContent()
-        );
+        List<PostListProjection> orderedPosts =
+                findPostsInSearchOrder(
+                        searchPage.getContent()
+                );
 
-        Page<Post> postPage = new PageImpl<>(
-                orderedPosts,
+        List<PostListResponse> responses =
+                postService.toPostListResponses(
+                        orderedPosts,
+                        userId
+                );
+
+        return new PageImpl<>(
+                responses,
                 searchPage.getPageable(),
                 searchPage.getTotalElements()
-        );
-
-        return toPostListResponse(
-                postPage,
-                userId
         );
     }
 
@@ -167,18 +167,18 @@ public class PostSearchService {
         );
     }
 
-    private List<Post> findPostsInSearchOrder(
+    private List<PostListProjection> findPostsInSearchOrder(
             List<Long> postIds
     ) {
         if (postIds.isEmpty()) {
             return List.of();
         }
 
-        Map<Long, Post> postMap =
-                postRepository.findAllByIdsWithDetails(postIds)
+        Map<Long, PostListProjection> postMap =
+                postRepository.findAllPostListByIds(postIds)
                         .stream()
                         .collect(Collectors.toMap(
-                                Post::getId,
+                                PostListProjection::getId,
                                 post -> post
                         ));
 
@@ -186,71 +186,6 @@ public class PostSearchService {
                 .map(postMap::get)
                 .filter(Objects::nonNull)
                 .toList();
-    }
-
-    private Page<PostListResponse> toPostListResponse(
-            Page<Post> postPage,
-            Long userId
-    ) {
-        List<Long> postIds = postPage.getContent()
-                .stream()
-                .map(Post::getId)
-                .toList();
-
-        Map<Long, Integer> commentCountMap =
-                getCommentCountMap(postIds);
-
-        Set<Long> likedPostIds =
-                getLikedPostIds(
-                        userId,
-                        postIds
-                );
-
-        return postPage.map(post ->
-                PostListResponse.from(
-                        post,
-                        commentCountMap.getOrDefault(
-                                post.getId(),
-                                0
-                        ),
-                        likedPostIds.contains(
-                                post.getId()
-                        )
-                )
-        );
-    }
-
-    private Map<Long, Integer> getCommentCountMap(
-            List<Long> postIds
-    ) {
-        if (postIds.isEmpty()) {
-            return Map.of();
-        }
-
-        return commentRepository.countByPostIds(postIds)
-                .stream()
-                .collect(Collectors.toMap(
-                        CommentCountProjection::getPostId,
-                        result -> Math.toIntExact(
-                                result.getCommentCount()
-                        )
-                ));
-    }
-
-    private Set<Long> getLikedPostIds(
-            Long userId,
-            List<Long> postIds
-    ) {
-        if (postIds.isEmpty()) {
-            return Set.of();
-        }
-
-        return new HashSet<>(
-                postLikeRepository.findLikedPostIds(
-                        userId,
-                        postIds
-                )
-        );
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)

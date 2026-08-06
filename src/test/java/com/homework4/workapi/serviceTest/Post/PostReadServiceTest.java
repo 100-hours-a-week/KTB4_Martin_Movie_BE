@@ -6,6 +6,8 @@ import com.homework4.workapi.entity.Post;
 import com.homework4.workapi.entity.PostLike;
 import com.homework4.workapi.entity.User;
 import com.homework4.workapi.projection.CommentCountProjection;
+import com.homework4.workapi.projection.PostListProjection;
+import com.homework4.workapi.repository.AttachRepository;
 import com.homework4.workapi.repository.CommentRepository;
 import com.homework4.workapi.repository.PostLikeRepository;
 import com.homework4.workapi.repository.PostRepository;
@@ -36,21 +38,21 @@ class PostReadServiceTest {
     @Mock UserService userService;
     @Mock PostLikeRepository postLikeRepository;
     @Mock CommentRepository commentRepository;
+    @Mock AttachRepository attachRepository;
 
     @InjectMocks PostService postService;
 
     @Test
     @DisplayName("게시글 목록 조회 success - 여러 게시글 Page 조회")
     void getPosts_success() {
-        User user = user(1L, "kim");
-        Post post1 = post(10L, user, "제목1", "내용1", 7);
-        Post post2 = post(20L, user, "제목2", "내용2", 7);
+        PostListProjection post1 = postListProjection(10L, "제목1", "내용1");
+        PostListProjection post2 = postListProjection(20L, "제목2", "내용2");
 
         CommentCountProjection countResult = mock(CommentCountProjection.class);
         when(countResult.getPostId()).thenReturn(10L);
         when(countResult.getCommentCount()).thenReturn(2L);
 
-        when(postRepository.findAllWithUser(any(Pageable.class)))
+        when(postRepository.findPostList(any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(post1, post2)));
         when(commentRepository.countByPostIds(
                 List.of(10L, 20L)
@@ -61,6 +63,9 @@ class PostReadServiceTest {
                 userId,
                 List.of(10L, 20L)
         )).thenReturn(List.of(10L));
+        when(attachRepository.findThumbnailUrlsByPostIds(
+                List.of(10L, 20L)
+        )).thenReturn(List.of());
 
         Page<PostListResponse> responses =
                 postService.getPosts(userId, 1);
@@ -71,7 +76,7 @@ class PostReadServiceTest {
         assertTrue(responses.getContent().get(0).liked());
         assertFalse(responses.getContent().get(1).liked());
 
-        verify(postRepository).findAllWithUser(any(Pageable.class));
+        verify(postRepository).findPostList(any(Pageable.class));
         verify(commentRepository).countByPostIds(List.of(10L, 20L));
         verify(commentRepository, never()).countByPost_Id(anyLong());
     }
@@ -141,6 +146,23 @@ class PostReadServiceTest {
     private Post post(Long id, User user, String title, String content, int rating) {
         Post post = new Post(user, title, content, rating);
         ReflectionTestUtils.setField(post, "id", id);
+        return post;
+    }
+
+    private PostListProjection postListProjection(
+            Long id,
+            String title,
+            String content
+    ) {
+        PostListProjection post = mock(PostListProjection.class);
+        when(post.getId()).thenReturn(id);
+        when(post.getTitle()).thenReturn(title);
+        when(post.getContent()).thenReturn(content);
+        when(post.getUsername()).thenReturn("kim");
+        when(post.isDeleted()).thenReturn(false);
+        when(post.getLikeCount()).thenReturn(0);
+        when(post.getViewCount()).thenReturn(0L);
+        when(post.getRating()).thenReturn(7);
         return post;
     }
 }

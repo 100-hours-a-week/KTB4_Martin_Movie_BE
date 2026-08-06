@@ -1,6 +1,10 @@
 package com.homework4.workapi.service;
 
+import com.homework4.workapi.entity.*;
 import com.homework4.workapi.event.PostSearchSyncEvent;
+import com.homework4.workapi.projection.AttachThumbnailProjection;
+import com.homework4.workapi.projection.PostListProjection;
+import com.homework4.workapi.repository.*;
 import org.springframework.context.ApplicationEventPublisher;
 import com.homework4.workapi.dto.post.request.PostRequest;
 import com.homework4.workapi.dto.post.response.PostLikeResponse;
@@ -8,20 +12,9 @@ import com.homework4.workapi.dto.post.response.PostListResponse;
 import com.homework4.workapi.dto.post.response.PostResponse;
 import com.homework4.workapi.dto.post.request.UpdatePostRequest;
 import com.homework4.workapi.dto.post.response.PostsPreviewResponse;
-import com.homework4.workapi.entity.Post;
-import com.homework4.workapi.entity.PostLike;
-import com.homework4.workapi.entity.PostView;
-import com.homework4.workapi.entity.User;
 import com.homework4.workapi.projection.CommentCountProjection;
-import com.homework4.workapi.repository.CommentRepository;
-import com.homework4.workapi.repository.PostLikeRepository;
-import com.homework4.workapi.repository.PostRepository;
-import com.homework4.workapi.repository.PostViewRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +38,7 @@ public class PostService {
     private final FileService fileService;
     private final PostViewRepository postViewRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final AttachRepository attachRepository;
 
     @Transactional
     public PostResponse addPost(Long userId, PostRequest postRequest) {
@@ -54,6 +48,51 @@ public class PostService {
         eventPublisher.publishEvent(PostSearchSyncEvent.upsert(savedPost.getId()));
 
         return PostResponse.from(savedPost, 0, false);
+    }
+
+    List<PostListResponse> toPostListResponses(
+            List<PostListProjection> posts,
+            Long userId
+    ) {
+        if (posts.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> postIds = posts.stream()
+                .map(PostListProjection::getId)
+                .toList();
+
+        Map<Long, Integer> commentCountMap =
+                commentRepository.countByPostIds(postIds)
+                        .stream()
+                        .collect(Collectors.toMap(
+                                CommentCountProjection::getPostId,
+                                result -> Math.toIntExact(
+                                        result.getCommentCount()
+                                )
+                        ));
+
+        Set<Long> likedPostIds = new HashSet<>(
+                postLikeRepository.findLikedPostIds(
+                        userId,
+                        postIds
+                )
+        );
+
+        Map<Long, String> thumbnailUrlMap = attachRepository.findThumbnailUrlsByPostIds(postIds)
+                        .stream()
+                        .collect(Collectors.toMap(
+                                AttachThumbnailProjection::getPostId,
+                                AttachThumbnailProjection::getThumbnailUrl));
+
+        return posts.stream()
+                .map(post -> PostListResponse.from(
+                        post,
+                        commentCountMap.getOrDefault(post.getId(), 0),
+                        likedPostIds.contains(post.getId()),
+                        thumbnailUrlMap.get(post.getId())
+                ))
+                .toList();
     }
 
     @Transactional
@@ -89,8 +128,12 @@ public class PostService {
                 }).toList();
     }
 
-    @Transactional
-    public Page<PostListResponse> getPosts(Long userId, int page) {
+
+
+    public Page<PostListResponse> getPosts(
+            Long userId,
+            int page
+    ) {
         if (page < MIN_PAGE) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -98,37 +141,30 @@ public class PostService {
             );
         }
 
-        Pageable pageable = PageRequest.of(page - MIN_PAGE, POST_PAGE_SIZE, Sort.by(Sort.Order.desc("createTime"), Sort.Order.desc("id")));
-
-        Page<Post> postPage = postRepository.findAllWithUser(pageable);
-
-        List<Long> postIds = postPage.getContent().stream()
-                .map(Post::getId)
-                .toList();
-
-        Map<Long, Integer> commentCountMap = postIds.isEmpty()
-                ? Map.of()
-                : commentRepository.countByPostIds(postIds)
-                .stream()
-                .collect(Collectors.toMap(
-                        CommentCountProjection::getPostId,
-                        result -> Math.toIntExact(
-                                result.getCommentCount()
-                        )
-                ));
-
-        Set<Long> likedPostIds = postIds.isEmpty()
-                ? Set.of()
-                : new HashSet<>(
-                postLikeRepository.findLikedPostIds(userId, postIds)
+        Pageable pageable = PageRequest.of(
+                page - MIN_PAGE,
+                POST_PAGE_SIZE,
+                Sort.by(
+                        Sort.Order.desc("createTime"),
+                        Sort.Order.desc("id")
+                )
         );
 
-        return postPage.map(post ->
-                PostListResponse.from(post, commentCountMap.getOrDefault(post.getId(), 0), likedPostIds.contains(post.getId()))
+        Page<PostListProjection> postPage =
+                postRepository.findPostList(pageable);
+
+        List<PostListResponse> responses =
+                toPostListResponses(
+                        postPage.getContent(),
+                        userId
+                );
+
+        return new PageImpl<>(
+                responses,
+                postPage.getPageable(),
+                postPage.getTotalElements()
         );
     }
-
-
     @Transactional
     public PostResponse getPost(Long postId, Long userId) {
         Post post = findPostById(postId);

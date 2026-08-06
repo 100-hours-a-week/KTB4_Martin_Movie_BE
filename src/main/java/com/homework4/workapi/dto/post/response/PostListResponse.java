@@ -1,6 +1,6 @@
 package com.homework4.workapi.dto.post.response;
 
-import com.homework4.workapi.entity.Post;
+import com.homework4.workapi.projection.PostListProjection;
 
 import java.time.LocalDateTime;
 
@@ -18,17 +18,15 @@ public record PostListResponse(
         int rating,
         String profileImageUrl
 ) {
-    public static PostListResponse from(Post post, int commentCount, boolean liked) {
-        String thumbnailUrl = post.getAttaches().stream()
-                .findFirst()
-                .map(attach -> attach.getAttachUrl())
-                .orElse(null);
+    public static PostListResponse from(PostListProjection post, int commentCount, boolean liked, String thumbnailUrl) {
+        String username = post.isDeleted() ? "(알 수 없음)" : post.getUsername();
+        String profileImageUrl = post.isDeleted() ? null : post.getProfileImageUrl();
 
         return new PostListResponse(
                 post.getId(),
                 post.getTitle(),
                 post.getContent(),
-                post.getUser().getDisplayUsername(),
+                username,
                 post.getLikeCount(),
                 commentCount,
                 post.getCreateTime(),
@@ -36,7 +34,7 @@ public record PostListResponse(
                 liked,
                 post.getViewCount(),
                 post.getRating(),
-                post.getUser().getDisplayProfileImageUrl()
+                profileImageUrl
         );
     }
 }
