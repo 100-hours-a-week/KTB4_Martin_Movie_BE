@@ -54,7 +54,29 @@ public class MovieService {
                         HttpStatus.NOT_FOUND,
                         "영화를 찾을 수 없습니다."
                 ));
-
         return MovieResponse.from(movie);
+    }
+
+    public Page<MoviesResponse> searchMovies(int page, String keyword) {
+        if (page < MIN_PAGE) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, PAGE_MIN_MESSAGE);
+        }
+
+        if (keyword == null || keyword.isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "검색어를 입력해야 합니다."
+            );
+        }
+
+        Pageable pageable = PageRequest.of(page - MIN_PAGE, MOVIE_PAGE_SIZE,
+                Sort.by(
+                        Sort.Order.asc("ranking"),
+                        Sort.Order.asc("id")
+                )
+        );
+
+        return movieRepository.findByTitleContaining(keyword.trim(), pageable)
+                .map(MoviesResponse::from);
     }
 }
