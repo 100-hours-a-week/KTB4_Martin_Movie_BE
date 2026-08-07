@@ -17,14 +17,16 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Component
 @Profile("movie-import")
 @RequiredArgsConstructor
-
-public class MovieDataLoader implements ApplicationRunner {
+public class MovieDataLoader
+        implements ApplicationRunner {
 
     private static final int BATCH_SIZE = 100;
 
@@ -37,26 +39,33 @@ public class MovieDataLoader implements ApplicationRunner {
     public void run(ApplicationArguments args)
             throws Exception {
 
-        if (movieRepository.count() > 0) {
-            log.info("영화 데이터가 이미 존재하여 적재를 건너뜁니다.");
-            return;
-        }
-
         String dataPath = System.getenv("MOVIE_DATA_PATH");
 
         if (dataPath == null || dataPath.isBlank()) {
-            throw new IllegalStateException("MOVIE_DATA_PATH 환경변수가 없습니다.");
+            throw new IllegalStateException(
+                    "MOVIE_DATA_PATH 환경변수가 없습니다."
+            );
         }
 
         Path path = Path.of(dataPath);
 
         if (!Files.isRegularFile(path)) {
-            throw new IllegalStateException("영화 데이터 파일을 찾을 수 없습니다: " + path);
+            throw new IllegalStateException(
+                    "영화 데이터 파일을 찾을 수 없습니다: "
+                            + path
+            );
         }
 
-        List<MovieData> movieData = objectMapper.readValue(path, new TypeReference<>() {});
+        List<MovieData> movieData = objectMapper.readValue(
+                path,
+                new TypeReference<>() {}
+        );
 
-        for (int start = 0;
+        int insertedCount = 0;
+        int skippedExistingCount = 0;
+
+        for (
+                int start = 0;
                 start < movieData.size();
                 start += BATCH_SIZE
         ) {
@@ -65,26 +74,54 @@ public class MovieDataLoader implements ApplicationRunner {
                     movieData.size()
             );
 
-            List<Movie> movies =
-                    movieData.subList(start, end)
-                            .stream()
-                            .map(MovieData::toEntity)
-                            .toList();
+            List<MovieData> batch =
+                    movieData.subList(start, end);
 
-            movieRepository.saveAll(movies);
-            movieRepository.flush();
-            entityManager.clear();
+            List<Long> tmdbIds = batch.stream()
+                    .map(MovieData::tmdbId)
+                    .toList();
+
+            Set<Long> existingTmdbIds = new HashSet<>(
+                    movieRepository.findExistingTmdbIds(
+                            tmdbIds
+                    )
+            );
+
+            List<Movie> newMovies = batch.stream()
+                    .filter(data ->
+                            !existingTmdbIds.contains(
+                                    data.tmdbId()
+                            )
+                    )
+                    .map(MovieData::toEntity)
+                    .toList();
+
+            if (!newMovies.isEmpty()) {
+                movieRepository.saveAll(newMovies);
+                movieRepository.flush();
+                entityManager.clear();
+            }
+
+            insertedCount += newMovies.size();
+            skippedExistingCount +=
+                    batch.size() - newMovies.size();
 
             log.info(
-                    "영화 데이터 적재 진행: {}/{}",
+                    "영화 적재 진행: {}/{} "
+                            + "(신규: {}, 기존 건너뜀: {})",
                     end,
-                    movieData.size()
+                    movieData.size(),
+                    insertedCount,
+                    skippedExistingCount
             );
         }
 
         log.info(
-                "영화 데이터 적재 완료: {}개",
-                movieData.size()
+                "영화 증분 적재 완료: 입력 {}개, 신규 {}개, "
+                        + "기존 건너뜀 {}개",
+                movieData.size(),
+                insertedCount,
+                skippedExistingCount
         );
     }
 
