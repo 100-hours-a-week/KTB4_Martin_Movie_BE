@@ -33,8 +33,7 @@ public class AttachService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "게시글 작성자만 첨부파일을 첨부 할 수 있습니다.");
         }
 
-        Optional<Attach> existingAttach =
-                attachRepository.findByPost_IdAndUploadKey(postId, uploadKey.toString());
+        Optional<Attach> existingAttach = attachRepository.findByPost_IdAndUploadKey(postId, uploadKey.toString());
 
         if (existingAttach.isPresent()) {
             return AttachResponse.from(existingAttach.get());

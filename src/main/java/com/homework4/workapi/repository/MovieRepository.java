@@ -12,16 +12,5 @@ import java.util.List;
 
 public interface MovieRepository extends JpaRepository<Movie, Long> {
     List<Movie> findTop5ByOrderByReleaseDateDescIdDesc();
-
     Page<Movie> findByTitleContaining(String keyword, Pageable pageable);
-
-    @Query("""
-        select m.tmdbId
-        from Movie m
-        where m.tmdbId in :tmdbIds
-        """)
-    List<Long> findExistingTmdbIds(
-            @Param("tmdbIds")
-            Collection<Long> tmdbIds
-    );
 }
