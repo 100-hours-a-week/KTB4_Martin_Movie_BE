@@ -71,7 +71,7 @@ public class MovieService {
 
         Pageable pageable = PageRequest.of(page - MIN_PAGE, MOVIE_PAGE_SIZE,
                 Sort.by(
-                        Sort.Order.asc("ranking"),
+                        Sort.Order.asc("releaseDate"),
                         Sort.Order.asc("id")
                 )
         );
