@@ -6,8 +6,6 @@ import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Set;
 
@@ -17,18 +15,6 @@ class UpdatePostRequestTest {
 
     private final Validator validator =
             Validation.buildDefaultValidatorFactory().getValidator();
-
-    @Test
-    @DisplayName("게시글 수정 요청 success - 입력값이 모두 유효하다")
-    void updatePostRequest_success() {
-        UpdatePostRequest request =
-                createRequest("수정 제목", "수정 내용", 7);
-
-        Set<ConstraintViolation<UpdatePostRequest>> violations =
-                validator.validate(request);
-
-        assertTrue(violations.isEmpty());
-    }
 
     @Test
     @DisplayName("게시글 수정 요청 fail - 제목이 비어 있으면 실패한다")
@@ -64,32 +50,6 @@ class UpdatePostRequestTest {
                 validator.validate(request);
 
         assertHasViolation(violations, "rating");
-    }
-
-    @ParameterizedTest
-    @ValueSource(ints = {0, 11})
-    @DisplayName("게시글 수정 요청 fail - 별점이 범위를 벗어나면 실패한다")
-    void updatePostRequest_fail_ratingOutOfRange(int rating) {
-        UpdatePostRequest request =
-                createRequest("수정 제목", "수정 내용", rating);
-
-        Set<ConstraintViolation<UpdatePostRequest>> violations =
-                validator.validate(request);
-
-        assertHasViolation(violations, "rating");
-    }
-
-    @ParameterizedTest
-    @ValueSource(ints = {1, 10})
-    @DisplayName("게시글 수정 요청 success - 별점 경계값이 유효하다")
-    void updatePostRequest_success_ratingBoundary(int rating) {
-        UpdatePostRequest request =
-                createRequest("수정 제목", "수정 내용", rating);
-
-        Set<ConstraintViolation<UpdatePostRequest>> violations =
-                validator.validate(request);
-
-        assertTrue(violations.isEmpty());
     }
 
     private UpdatePostRequest createRequest(

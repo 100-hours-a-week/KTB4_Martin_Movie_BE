@@ -1,6 +1,5 @@
 package com.homework4.workapi.service;
 
-import com.homework4.workapi.dto.common.CommonResponse;
 import com.homework4.workapi.dto.movie.response.MoviePreviewResponse;
 import com.homework4.workapi.dto.movie.response.MovieResponse;
 import com.homework4.workapi.dto.movie.response.MoviesResponse;

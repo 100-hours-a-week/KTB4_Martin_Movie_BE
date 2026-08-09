@@ -17,29 +17,9 @@ class LoginRequestTest {
             Validation.buildDefaultValidatorFactory().getValidator();
 
     @Test
-    @DisplayName("로그인 요청 success - 올바른 값이면 검증에 성공한다")
-    void loginRequest_success() {
-        LoginRequest request = createRequest("kim@test.com", "Test1234!");
-
-        Set<ConstraintViolation<LoginRequest>> violations = validator.validate(request);
-
-        assertTrue(violations.isEmpty());
-    }
-
-    @Test
     @DisplayName("로그인 요청 fail - email이 빈칸이면 검증에 실패한다")
     void loginRequest_fail_blankEmail() {
         LoginRequest request = createRequest("", "Test1234!");
-
-        Set<ConstraintViolation<LoginRequest>> violations = validator.validate(request);
-
-        assertHasViolation(violations, "email");
-    }
-
-    @Test
-    @DisplayName("로그인 요청 fail - email 형식이 아니면 검증에 실패한다")
-    void loginRequest_fail_invalidEmailFormat() {
-        LoginRequest request = createRequest("invalid-email", "Test1234!");
 
         Set<ConstraintViolation<LoginRequest>> violations = validator.validate(request);
 

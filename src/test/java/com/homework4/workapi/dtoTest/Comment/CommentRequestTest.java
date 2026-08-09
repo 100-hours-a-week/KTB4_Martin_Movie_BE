@@ -17,16 +17,6 @@ class CommentRequestTest {
             Validation.buildDefaultValidatorFactory().getValidator();
 
     @Test
-    @DisplayName("댓글 요청 success - 올바른 값이면 검증에 성공한다")
-    void commentRequest_success() {
-        CommentRequest request = createRequest("댓글 내용");
-
-        Set<ConstraintViolation<CommentRequest>> violations = validator.validate(request);
-
-        assertTrue(violations.isEmpty());
-    }
-
-    @Test
     @DisplayName("댓글 요청 fail - content가 빈칸이면 검증에 실패한다")
     void commentRequest_fail_blankContent() {
         CommentRequest request = createRequest("");

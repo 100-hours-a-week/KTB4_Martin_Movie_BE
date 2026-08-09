@@ -165,6 +165,7 @@ public class PostService {
                 postPage.getTotalElements()
         );
     }
+
     @Transactional
     public PostResponse getPost(Long postId, Long userId) {
         Post post = findPostById(postId);
