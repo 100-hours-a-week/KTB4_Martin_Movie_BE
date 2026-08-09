@@ -19,7 +19,9 @@
 
 ## 서비스 시연
 
-> 배포 URL 또는 시연 영상 링크를 준비하는 대로 이곳에 추가합니다.
+[▶ MARTIN MOVIE 서비스 시연 영상 보기](https://github.com/100-hours-a-week/KTB4_Martin_Movie_BE/releases/download/personal_BE/2026-08-09.9.19.14.mov)
+
+[![MARTIN MOVIE 서비스 시연](docs/images/home.png)](https://github.com/100-hours-a-week/KTB4_Martin_Movie_BE/releases/download/personal_BE/2026-08-09.9.19.14.mov)
 
 ## 주요 기능
 
