@@ -21,8 +21,6 @@
 
 [▶ MARTIN MOVIE 서비스 시연 영상 보기](https://github.com/100-hours-a-week/KTB4_Martin_Movie_BE/releases/download/personal_BE/2026-08-09.9.19.14.mov)
 
-[![MARTIN MOVIE 서비스 시연](docs/images/home.png)](https://github.com/100-hours-a-week/KTB4_Martin_Movie_BE/releases/download/personal_BE/2026-08-09.9.19.14.mov)
-
 ## 주요 기능
 
 - JWT Access Token과 Refresh Token 기반 인증 및 토큰 재발급
@@ -49,7 +47,6 @@
 | Test | JUnit 5, Spring Boot Test |  
 
 ## 시스템 아키텍처
-![[Pasted image 20260809165515.png]]
 - Nginx가 정적 프론트엔드를 제공하고 `/api` 요청을 Backend로 프록시합니다.
 - 운영 환경은 Backend, Frontend, Elasticsearch, Nginx를 Docker Compose로 함께 실행합니다.
 - MySQL은 서비스의 원본 데이터 저장소이며, Elasticsearch는 게시글 검색 전용 인덱스를 보관합니다.
