@@ -214,11 +214,94 @@ sequenceDiagram
 
 ### E-R Diagram
 
-```mermaid  
-erDiagram  
-    USERS ||--o{ POSTS : writes    USERS ||--o{ COMMENTS : writes    POSTS ||--o{ COMMENTS : contains    USERS ||--o{ POST_LIKE : creates    POSTS ||--o{ POST_LIKE : receives    USERS ||--o{ POST_VIEWS : records    POSTS ||--o{ POST_VIEWS : has    POSTS ||--o{ ATTACHES : has    USERS ||--o{ REFRESH_TOKEN : owns    MOVIES ||--o{ MOVIE_ACTORS : contains  
-    USERS {        bigint id PK        varchar username UK        varchar email UK        varchar password        boolean deleted    }    POSTS {        bigint id PK        bigint user_id FK        varchar title        varchar content        int rating        int like_count        bigint view_count    }    COMMENTS {        bigint id PK        bigint post_id FK        bigint user_id FK        varchar content    }    ATTACHES {        bigint id PK        bigint post_id FK        varchar upload_key        varchar attach_url    }    POST_LIKE {        bigint id PK        bigint post_id FK        bigint user_id FK    }    POST_VIEWS {        bigint id PK        bigint post_id FK        bigint user_id FK        date view_at    }    MOVIES {        bigint id PK        bigint tmdb_id UK        varchar title        date release_date        decimal tmdb_rating    }    MOVIE_ACTORS {        bigint movie_id FK        int actors_order PK        varchar actors    }  
-```  
+```mermaid
+erDiagram
+    USERS ||--o{ POSTS : writes
+    USERS ||--o{ COMMENTS : writes
+    POSTS ||--o{ COMMENTS : contains
+    USERS ||--o{ POST_LIKE : creates
+    POSTS ||--o{ POST_LIKE : receives
+    USERS ||--o{ POST_VIEWS : records
+    POSTS ||--o{ POST_VIEWS : has
+    POSTS ||--o{ ATTACHES : has
+    MOVIES ||--o{ MOVIE_ACTORS : contains
+
+    USERS {
+        bigint id PK "NN, auto increment"
+        varchar username UK "NN, max 10"
+        varchar email UK "NN, max 255"
+        varchar password "NN"
+        boolean deleted "NN, default false"
+        datetime deleted_at "nullable"
+        varchar profile_image_url "nullable"
+    }
+    POSTS {
+        bigint id PK "NN, auto increment"
+        bigint user_id FK "NN"
+        varchar title "NN, max 100"
+        varchar content "NN, max 5000"
+        datetime create_time "NN"
+        datetime update_time "nullable"
+        int rating "NN"
+        int like_count "NN, default 0"
+        bigint view_count "NN, default 0"
+    }
+    COMMENTS {
+        bigint id PK "NN, auto increment"
+        bigint post_id FK "NN"
+        bigint user_id FK "NN"
+        varchar content "NN, max 1000"
+        datetime create_time "NN"
+        datetime update_time "nullable"
+    }
+    ATTACHES {
+        bigint id PK "NN, auto increment"
+        bigint post_id FK "NN, UK(post_id, upload_key)"
+        varchar upload_key "NN, max 36"
+        varchar attach_url "NN"
+        datetime attach_time "NN"
+    }
+    POST_LIKE {
+        bigint id PK "NN, auto increment"
+        bigint post_id FK "NN, UK(post_id, user_id)"
+        bigint user_id FK "NN, UK(post_id, user_id)"
+        datetime create_time "NN"
+    }
+    POST_VIEWS {
+        bigint id PK "NN, auto increment"
+        bigint post_id FK "NN, UK(post_id, user_id)"
+        bigint user_id FK "NN, UK(post_id, user_id)"
+        date view_at "NN"
+    }
+    MOVIES {
+        bigint id PK "NN, auto increment"
+        bigint tmdb_id UK "NN"
+        varchar title "NN"
+        varchar poster_path "NN"
+        int running_time "NN"
+        date release_date "NN"
+        varchar certification "nullable"
+        varchar genre "nullable"
+        varchar overview "nullable, max 5000"
+        varchar director "nullable"
+        decimal tmdb_rating "nullable"
+        int ranking "NN"
+    }
+    MOVIE_ACTORS {
+        bigint movie_id PK, FK "NN"
+        int actors_order PK "NN"
+        varchar actors "nullable"
+    }
+    REFRESH_TOKEN {
+        bigint id PK "NN, auto increment"
+        varchar token UK "NN"
+        bigint user_id "NN, logical user reference"
+        datetime expires_at "NN"
+    }
+```
+
+> `NN`은 `NOT NULL`, `UK`는 `UNIQUE`, `PK`는 Primary Key, `FK`는 Foreign Key입니다.
+> `movie_actors`의 Primary Key는 `(movie_id, actors_order)` 복합 키입니다. `refresh_token.user_id`는 현재 DB FK 제약이나 JPA 연관관계 없이 애플리케이션에서 관리하는 논리적 사용자 참조입니다.
 
 ## API 요약
 
