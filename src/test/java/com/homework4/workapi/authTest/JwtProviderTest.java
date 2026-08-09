@@ -65,8 +65,13 @@ class JwtProviderTest {
                 "kim"
         );
 
-        String tamperedToken = token.substring(0, token.length() - 1)
-                + (token.endsWith("a") ? "b" : "a");
+        int tamperedIndex = token.lastIndexOf('.') + 5;
+        char originalCharacter = token.charAt(tamperedIndex);
+        char replacementCharacter = originalCharacter == 'A' ? 'B' : 'A';
+
+        String tamperedToken = token.substring(0, tamperedIndex)
+                + replacementCharacter
+                + token.substring(tamperedIndex + 1);
 
         assertThrows(
                 JwtException.class,
