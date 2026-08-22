@@ -20,6 +20,11 @@ spring:
   jpa:
     open-in-view: false
 
+app:
+  elasticsearch:
+    post-search:
+      ensure-index-on-startup: ${ELASTICSEARCH_ENSURE_POST_SEARCH_INDEX:true}
+
 aws:
   s3:
     bucket: ${AWS_S3_BUCKET:mypros3-696254624810-ap-southeast-2-an}

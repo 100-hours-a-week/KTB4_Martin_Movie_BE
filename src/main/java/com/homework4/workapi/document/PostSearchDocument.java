@@ -15,6 +15,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Document(indexName = "workapi-posts-search", createIndex = false, writeTypeHint = WriteTypeHint.FALSE)
+@Setting(settingPath = "/elasticsearch/post-search-settings.json")
+@Mapping(mappingPath = "/elasticsearch/post-search-mapping.json")
 public class PostSearchDocument {
 
     @Id

@@ -1,0 +1,21 @@
+{
+  "properties": {
+    "id": {
+      "type": "long"
+    },
+    "title": {
+      "type": "text",
+      "analyzer": "posts_nori",
+      "search_analyzer": "posts_nori"
+    },
+    "content": {
+      "type": "text",
+      "analyzer": "posts_nori",
+      "search_analyzer": "posts_nori"
+    },
+    "createTime": {
+      "type": "date",
+      "format": "uuuu-MM-dd'T'HH:mm:ss.SSSSSS"
+    }
+  }
+}
