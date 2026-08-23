@@ -24,6 +24,8 @@ app:
   elasticsearch:
     post-search:
       ensure-index-on-startup: ${ELASTICSEARCH_ENSURE_POST_SEARCH_INDEX:true}
+      reindex:
+        batch-size: ${ELASTICSEARCH_POST_SEARCH_REINDEX_BATCH_SIZE:500}
 
 aws:
   s3:
