@@ -201,6 +201,22 @@ sequenceDiagram
 - Elasticsearch 동기화 실패가 원본 RDS 트랜잭션을 롤백시키지 않도록 분리합니다.
 - 장애 후에는 RDS 원본 데이터를 기준으로 재색인할 수 있습니다.
 
+### 게시글 전체 재색인
+
+기존 RDS 게시글을 Elasticsearch 검색 인덱스로 옮겨야 할 때는
+`search-reindex` 프로파일을 사용합니다. 일반 실행에는 포함되지 않는
+일회성 러너이며, 게시글 ID 기준으로 배치 처리한 뒤 자동으로 종료됩니다.
+
+```bash
+SPRING_PROFILES_ACTIVE=production,search-reindex \
+./gradlew bootRun --args='--spring.main.web-application-type=none'
+```
+
+로컬 데이터베이스를 대상으로 실행하려면 `production` 대신 `local`을
+사용합니다. 배치 크기는 `ELASTICSEARCH_POST_SEARCH_REINDEX_BATCH_SIZE`
+환경변수로 조정할 수 있습니다. 기존 검색 문서를 먼저 비워야 하는 경우에만
+`--clear-before-reindex` 옵션을 추가합니다.
+
 ## 데이터베이스 설계
 
 ### 요구사항 분석

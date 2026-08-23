@@ -36,6 +36,11 @@ public interface PostRepository extends JpaRepository<Post,Long> {
             @Param("postIds") List<Long> postIds
     );
 
+    List<Post> findByIdGreaterThanOrderByIdAsc(
+            Long id,
+            Pageable pageable
+    );
+
     @Query(
             value = """
                 select
