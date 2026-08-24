@@ -11,6 +11,10 @@ public final class ValidationConstants {
     public static final String PAGE_MIN_MESSAGE = "페이지는 1 이상이어야 합니다.";
     public static final int SEARCH_KEYWORD_MAX_LENGTH = 99;
     public static final String KEYWORD_MAX_MESSAGE = "검색어는 100자 미만 이어야 합니다.";
+    public static final int MAX_SEARCH_PAGE = 1000;
+    public static final String PAGE_MAX_MESSAGE =
+            "페이지는 " + MAX_SEARCH_PAGE + " 이하이어야 합니다.";
+
     private ValidationConstants() {
     }
 }

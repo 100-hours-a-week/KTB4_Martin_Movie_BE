@@ -12,6 +12,9 @@ import com.homework4.workapi.repository.PostSearchRepository;
 import static com.homework4.workapi.common.PaginationConstants.POST_PAGE_SIZE;
 import static com.homework4.workapi.validation.ValidationConstants.MIN_PAGE;
 import static com.homework4.workapi.validation.ValidationConstants.PAGE_MIN_MESSAGE;
+import static com.homework4.workapi.validation.ValidationConstants.MAX_SEARCH_PAGE;
+import static com.homework4.workapi.validation.ValidationConstants.PAGE_MAX_MESSAGE;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -78,6 +81,9 @@ public class PostSearchService {
     private void validatePage(int page) {
         if (page < MIN_PAGE) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, PAGE_MIN_MESSAGE);
+        }
+        if (page > MAX_SEARCH_PAGE) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, PAGE_MAX_MESSAGE);
         }
     }
 
