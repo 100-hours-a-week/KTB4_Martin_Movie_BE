@@ -8,6 +8,7 @@ import com.homework4.workapi.service.PostSearchService;
 import com.homework4.workapi.service.PostService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -15,12 +16,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.query.SourceFilter;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -84,6 +87,30 @@ class PostSearchServiceTest {
                 any(NativeQuery.class),
                 eq(PostSearchDocument.class)
         );
+    }
+
+    @Test
+    void searchPosts_disablesSourceFetch() {
+        when(searchHits.getSearchHits()).thenReturn(List.of());
+        when(searchHits.getTotalHits()).thenReturn(0L);
+        when(elasticsearchOperations.search(
+                any(NativeQuery.class),
+                eq(PostSearchDocument.class)
+        )).thenReturn(searchHits);
+
+        postSearchService.searchPosts(1L, 1, "keyword");
+
+        ArgumentCaptor<NativeQuery> queryCaptor =
+                ArgumentCaptor.forClass(NativeQuery.class);
+        verify(elasticsearchOperations).search(
+                queryCaptor.capture(),
+                eq(PostSearchDocument.class)
+        );
+
+        SourceFilter sourceFilter = queryCaptor.getValue().getSourceFilter();
+
+        assertNotNull(sourceFilter);
+        assertEquals(Boolean.FALSE, sourceFilter.fetchSource());
     }
 
     private void assertBadRequest(int page) {

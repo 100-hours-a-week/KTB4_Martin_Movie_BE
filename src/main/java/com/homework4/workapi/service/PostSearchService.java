@@ -24,6 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -131,6 +132,7 @@ public class PostSearchService {
                         )
                 )
                 .withPageable(pageable)
+                .withSourceFilter(FetchSourceFilter.of(false, null, null))
                 .withTrackTotalHits(true)
                 .withSort(sort ->
                         sort.score(score ->
