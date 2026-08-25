@@ -12,6 +12,9 @@ import com.homework4.workapi.repository.PostSearchRepository;
 import static com.homework4.workapi.common.PaginationConstants.POST_PAGE_SIZE;
 import static com.homework4.workapi.validation.ValidationConstants.MIN_PAGE;
 import static com.homework4.workapi.validation.ValidationConstants.PAGE_MIN_MESSAGE;
+import static com.homework4.workapi.validation.ValidationConstants.MAX_SEARCH_PAGE;
+import static com.homework4.workapi.validation.ValidationConstants.PAGE_MAX_MESSAGE;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -21,6 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -79,6 +83,9 @@ public class PostSearchService {
         if (page < MIN_PAGE) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, PAGE_MIN_MESSAGE);
         }
+        if (page > MAX_SEARCH_PAGE) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, PAGE_MAX_MESSAGE);
+        }
     }
 
     private void validateKeyword(String keyword) {
@@ -125,6 +132,7 @@ public class PostSearchService {
                         )
                 )
                 .withPageable(pageable)
+                .withSourceFilter(FetchSourceFilter.of(false, null, null))
                 .withTrackTotalHits(true)
                 .withSort(sort ->
                         sort.score(score ->

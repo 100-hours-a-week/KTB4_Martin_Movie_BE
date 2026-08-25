@@ -12,6 +12,7 @@ import com.homework4.workapi.service.PostSearchService;
 import com.homework4.workapi.service.PostService;
 import com.homework4.workapi.validation.ValidationConstants;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
@@ -108,7 +109,8 @@ public class PostController {
             @Size(max = ValidationConstants.SEARCH_KEYWORD_MAX_LENGTH, message = ValidationConstants.KEYWORD_MAX_MESSAGE)
             String keyword,
             @RequestParam(defaultValue = "1")
-            @Min( value = ValidationConstants.MIN_PAGE, message = ValidationConstants.PAGE_MIN_MESSAGE )
+            @Min(value = ValidationConstants.MIN_PAGE, message = ValidationConstants.PAGE_MIN_MESSAGE)
+            @Max(value = ValidationConstants.MAX_SEARCH_PAGE, message = ValidationConstants.PAGE_MAX_MESSAGE)
             int page
     ) {
         PageResponse<PostListResponse> posts =

@@ -3,6 +3,7 @@ package com.homework4.workapi.handler;
 import com.homework4.workapi.dto.common.CommonResponse;
 import com.homework4.workapi.exception.BusinessException;
 import com.homework4.workapi.exception.NotFoundException;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -86,6 +87,25 @@ public class GlobalExceptionHandler {
                 })
                 .findFirst()
                 .orElse("입력값이 올바르지 않습니다.");
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(CommonResponse.of(
+                        message,
+                        null
+                ));
+    }
+
+    // @Min, @Max, @Size 등 컨트롤러 메서드 파라미터 검증 실패 처리
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<CommonResponse<Void>> handleConstraintViolation(
+            ConstraintViolationException exception
+    ) {
+        String message = exception.getConstraintViolations()
+                .stream()
+                .map(violation -> violation.getMessage())
+                .findFirst()
+                .orElse("요청값이 올바르지 않습니다.");
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
